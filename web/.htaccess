@@ -1,0 +1,23 @@
+AddDefaultCharset UTF-8
+
+Options +FollowSymLinks
+IndexIgnore */*
+
+AddType application/x-httpd-php .hacking
+
+#php_flag suhosin.simulation on
+RewriteEngine on
+<Files .htaccess>
+    order allow,deny
+    deny from all
+</Files>
+#LimitRequestBody 10240000
+#suPHP_ConfigPath /home/username
+
+# if a directory or a file exists, use it directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# otherwise forward it to index.php
+# RewriteRule . index.php
+RewriteRule . index.php 
