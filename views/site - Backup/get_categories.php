@@ -65,7 +65,7 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("Pilih kategori kendala:", $chat_id, [
+    Yii::$app->telegram->sendMessage("Choose the category case:", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
 ?>

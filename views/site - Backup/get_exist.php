@@ -8,13 +8,16 @@ use yii\helpers\Url;
         "keyboard" =>[
             [
                 [
-                    'text' => "Home",
+                    'text' => "Create Ticket",
+                ],
+                [
+                    'text' => "Check Ticket",
                 ]
             ]
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("<b>Masih digunakan user lain, silahkan dicoba kembali 5 menit kemudian.</b>", $chat_id, [
+    Yii::$app->telegram->sendMessage("Hi ".$nama_depan.", \nYou're case has been exist : <b>$tiket</b>\nStatus : <b>$status</b>", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
     die();

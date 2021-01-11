@@ -20,8 +20,8 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("<b>Tiket kendala tidak ditemukan</b>", $chat_id, [
+    Yii::$app->telegram->sendMessage("Your start activity on <b>$start_date</b>,\n Please choose your needs :", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
-    die();
+    
 ?>

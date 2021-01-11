@@ -1,7 +1,7 @@
 <?php 
 
-use yii\helpers\Html;
-use yii\helpers\Url;
+    use yii\helpers\Html;
+    use yii\helpers\Url;
 
     $keyboard = [ 
         'resize_keyboard' => true,
@@ -14,7 +14,7 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("Hi ".$nama_depan."\xE2\x9C\x8C,\nSelamat datang di tiket myIndiHome bot.", $chat_id, [
+    Yii::$app->telegram->sendMessage("Hi ".$nama_depan.", \nYou has been reached the maximum time limit \xF0\x9F\x99\x8F.", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
 ?>

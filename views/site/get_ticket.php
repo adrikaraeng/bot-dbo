@@ -14,7 +14,7 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("Input your ticket:", $chat_id, [
+    Yii::$app->telegram->sendMessage("Masukkan tiket anda:", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
     // die();

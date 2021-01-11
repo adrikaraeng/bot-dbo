@@ -37,7 +37,7 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("Pilih versi aplikasi myIndihome atau Partner :", $chat_id, [
+    Yii::$app->telegram->sendMessage("Select the version of myIndiHome customer or partner :", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
 ?>

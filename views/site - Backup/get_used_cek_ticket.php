@@ -14,7 +14,7 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("<b>Masih digunakan user lain, silahkan dicoba kembali 5 menit kemudian.</b>", $chat_id, [
+    Yii::$app->telegram->sendMessage("<b>Using by another user, please try again in 5 minutes later</b>", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
     die();

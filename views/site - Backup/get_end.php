@@ -23,7 +23,7 @@ $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("Hi ".$nama_depan.", \nTiket kendala : <b>$tiket</b>", $chat_id, [
+    Yii::$app->telegram->sendMessage("Hi ".$nama_depan.", \nYou're ticket has been created : <b>$tiket</b>", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
 ?>

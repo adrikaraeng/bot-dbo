@@ -16,7 +16,7 @@ use yii\helpers\Url;
             ]
 		],
     ];
-    Yii::$app->telegram->sendMessage("Masukkan gambar, klik <b>skip</b> jika tidak ada.", $chat_id, [
+    Yii::$app->telegram->sendMessage("Insert an image of a case, click <b>skip</b> if don't have.", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
 ?>

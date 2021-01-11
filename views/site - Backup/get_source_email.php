@@ -7,7 +7,7 @@ use yii\helpers\Url;
         'remove_keyboard' => true
     ];
 
-    Yii::$app->telegram->sendMessage("Masukkan <b>email anda</b>, \nbukan email customer", $chat_id, [
+    Yii::$app->telegram->sendMessage("Insert <b>your email</b>, \nNot customer's email", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
 ?>

@@ -8,14 +8,14 @@ use yii\helpers\Url;
         "keyboard" =>[
             [
                 [
-                    'text' => "Home",
+                    'text' => "Exit",
                 ]
             ]
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("<b>Masih digunakan user lain, silahkan dicoba kembali 5 menit kemudian.</b>", $chat_id, [
+    Yii::$app->telegram->sendMessage("Input your ticket:", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
-    die();
+    // die();
 ?>
