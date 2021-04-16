@@ -33,10 +33,11 @@ $duser = $connection->createCommand("SELECT * FROM user WHERE id='$id'")->queryO
     <?php $this->head() ?>
 </head>
 <style>
-    body{
-        background:#444444;
-    }
+  body{
+    background:#444444;
+  }
   #webcam-pic{
+    display:none;
     position: fixed;
     z-index:999999999999;
     top:3px;
@@ -49,7 +50,7 @@ $duser = $connection->createCommand("SELECT * FROM user WHERE id='$id'")->queryO
 <div class="wrap">
     <?php
     NavBar::begin([
-        'brandLabel' => "Manohara",
+        'brandLabel' => "<b id='dashboard-title'>Manohara</b>",
         'brandUrl' => '',
         'options' => [
             'class' => 'navbar-default navbar-fixed-top',

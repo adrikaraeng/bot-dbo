@@ -26,7 +26,8 @@ AppAsset::register($this);
     position: fixed;
     z-index:999999999999;
     top:3px;
-    right:20px;
+    left:200px;
+    display:none;
   }
 
 </style>
@@ -75,7 +76,7 @@ AppAsset::register($this);
     NavBar::end();
     ?>
 
-    <div id="webcam-pic" class="wow tada" data-wow-iteration="infinite"  data-wow-duration="1800ms">
+    <div id="webcam-pic">
       <?php if($duser['webcam'] != ''):?>
         <?=Html::img("@web/images/webcam/".$duser['webcam'],['style'=>"width:60px;height:60px;border-radius:50px;border:2px solid #0005d2;"])?>
       <?php else:?>

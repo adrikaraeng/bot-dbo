@@ -326,7 +326,7 @@ $connection = \Yii::$app->db;
                   <?= $form->field($model, 'email')->textInput(['maxlength' => 50]) ?>
                   
                   <?php if($model->gambar != NULL):?>
-                    <div id="name-file"><b>Bukti Gambar</b></div>
+                    <div id="name-file"><b>Evidence</b></div>
                     <div id="gambar-search">
                         <?=Html::img("@web/images/".$model->gambar, [
                           'id' => "gbr-sml",
