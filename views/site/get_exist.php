@@ -17,7 +17,7 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("Hi ".$nama_depan.", \nTiket exist : <b>$tiket</b>\nStatus : <b>$status</b>", $chat_id, [
+    Yii::$app->telegram->sendMessage("Hai ".$nama_depan.", \nTiket exist : <b>$tiket</b>\nStatus : <b>$status</b>", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
     die();

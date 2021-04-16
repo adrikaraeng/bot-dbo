@@ -2,7 +2,9 @@ html,
 body {
     height: 100%;
 }
-
+.navbar-header{
+    height: 60px;
+}
 .wrap {
     min-height: 100%;
     height: auto;
@@ -10,13 +12,14 @@ body {
     padding: 0 0 60px;
 }
 
-.wrap > .container2{
-    margin-top:50px;
+.wrap > .my-container{
+    margin-top:40px;
     padding:10px;
 }
 
-.wrap > .container {
-    padding: 70px 15px 20px;
+
+.wrap > .my-container {
+    padding: 30px 15px 20px;
 }
 
 .footer {
@@ -24,6 +27,7 @@ body {
     background-color: #f5f5f5;
     border-top: 1px solid #ddd;
     padding-top: 20px;
+    opacity: 0.4;
 }
 
 .jumbotron {
@@ -110,6 +114,7 @@ a.desc:after {
     }
 }
 
+
 .nav > li > form > button.logout:focus,
 .nav > li > form > button.logout:hover {
     text-decoration: none;
@@ -118,3 +123,33 @@ a.desc:after {
 .nav > li > form > button.logout:focus {
     outline: none;
 }
+#take-off{
+    border: 2px solid #970000;
+}
+#take-off:hover{
+    background-color: #b90000;
+}
+.take-owner{
+    border: 2px solid #0543d1;
+    top:3px;
+    right:10px;
+    cursor:pointer;
+    float:left;
+}
+.take-owner:hover{
+    background-color: #2162fa;
+}
+
+#dashboard-title{
+    font-size: 1.2em;
+  text-align: center;
+height:70vh;
+  color: #d61c1c;
+  /* background: #d52e3f; */
+     font-family: 'Niconne', cursive;
+  font-weight: 700;
+text-shadow: 2px 2px 0px #80ca18,
+            3px 3px 0px #2f6dc4, 
+            4px 4px 0px #630c77
+}
+

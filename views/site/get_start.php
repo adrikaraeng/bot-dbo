@@ -8,10 +8,10 @@ use yii\helpers\Url;
         "keyboard" =>[
             [
                 [
-                    'text' => "Create Ticket",
+                    'text' => "Buat Tiket",
                 ],
                 [
-                    'text' => "Check Ticket",
+                    'text' => "Cek Tiket",
                 ],
                 [
                     'text' => "Exit",
@@ -20,7 +20,7 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("Waktu mulai sistem pada <b>$start_date</b>,\n Silahkan pilih kebutuhan anda:", $chat_id, [
+    Yii::$app->telegram->sendMessage("Hai <b>$nama_depan</b>,\nWaktu mulai sistem pada <b>$start_date</b>,\nSilahkan pilih kebutuhan anda:", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
     

@@ -131,9 +131,9 @@ AppAsset::register($this);
 
 <footer class="footer">
     <div class="container">
-        <p class="pull-left">&copy; DBO IT Dev<?= date('Y') ?></p>
+        <p class="pull-left">&copy; DBO IT Dev2021</p>
 
-        <p class="pull-right">Monitor Telegram Case 0.0.1</p>
+        <p class="pull-right">Manohara v.0.0.1</p>
     </div>
 </footer>
 

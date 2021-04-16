@@ -5,8 +5,14 @@ use yii\helpers\Url;
 // Yii::$app->db->createCommand()->truncateTable('temp_cek_ticket')->execute();
 // Yii::$app->db->createCommand()->truncateTable('temp_active_id')->execute();
 $connection = \Yii::$app->db;
-$connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
-$connection->createCommand("DELETE FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->execute();
+// $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
+// $connection->createCommand("DELETE FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->execute();
+
+if($status == "Closed"):
+    $sts = "\xE2\x9C\x85";
+else:
+    $sts = "\xE2\x8C\x9B";
+endif;
 
 
     $keyboard = [ 
@@ -14,12 +20,15 @@ $connection->createCommand("DELETE FROM temp_cek_ticket WHERE telegram_id='$user
         "keyboard" =>[
             [
                 [
+                    'text' => "Cek Tiket",
+                ],
+                [
                     'text' => "Exit",
                 ]
             ]
         ]
     ];
-    Yii::$app->telegram->sendMessage("Nama Pelanggan : <b>$nama_pelanggan</b>\nTicket status : <b>$status</b>\nKeluhan : <b>$keluhan</b>\nProgress Handling : $feedback\n\nBest Regards\n<b>DBO myIndiHome</b>", $chat_id, [
+    Yii::$app->telegram->sendMessage("Nama Pelanggan : <b>$nama_pelanggan</b>\nStatus Tiket : <b>$status</b> $sts\n\nKeluhan : <b>$keluhan</b>\n\nPenanganan : <b>$feedback</b>\n\nBest Regards\n<b>DBO myIndiHome</b>", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
     

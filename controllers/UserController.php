@@ -11,6 +11,7 @@ use app\models\SubKategori;
 use app\models\Backend;
 use app\models\ListProgressCases;
 use app\models\UserSearch;
+use app\models\DatesearchForm;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -18,6 +19,7 @@ use yii\helpers\Json;
 use yii\widgets\ActiveForm;
 use yii\web\UploadedFile;
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 /**
  * UserController implements the CRUD actions for User model.
@@ -51,6 +53,156 @@ class UserController extends Controller
     {
         return $this->redirect(['index']);
     }
+
+    public function actionDownloadSource()
+    {
+      $connection = \Yii::$app->db;
+        $model = new DatesearchForm;
+        if($model->load(Yii::$app->request->post())):
+          $mulai = $_POST['DatesearchForm']['tglMulai'];
+          $akhir = $_POST['DatesearchForm']['tglAkhir'];
+          $status = $_POST['DatesearchForm']['status'];
+
+          if(empty($status)):
+            $data = $connection->createCommand("SELECT * FROM cases AS a WHERE date(a.tanggal_masuk) >= '$mulai' AND date(a.tanggal_masuk) <= '$akhir' ORDER BY a.tanggal_masuk ASC")->queryAll();
+          else:
+            $data = $connection->createCommand("SELECT * FROM cases AS a WHERE date(a.tanggal_masuk) >= '$mulai' AND date(a.tanggal_masuk) <= '$akhir' AND status_owner='$status' ORDER BY a.tanggal_masuk ASC")->queryAll();
+          endif;
+          
+          $filename = 'manohara-'.date($mulai).'__'.date($akhir).'.xls';
+          
+          header("Content-type: application/vnd-ms-excel");
+          header("Content-Disposition: attachment; filename=".$filename);
+          echo '<table width="100%">';
+            echo '<thead>';
+              echo '<tr>';
+                echo '<th>Login</th>';
+                echo '<th>Insert Date</th>';
+                echo '<th>Nama Pelanggan</th>';
+                echo '<th>Internet</th>';
+                echo '<th>PSTN</th>';
+                echo '<th>Handphone</th>';
+                echo '<th>Email</th>';
+                echo '<th>Status</th>';
+                echo '<th>Age</th>';
+                echo '<th>Tiket</th>';
+                echo '<th>Versi App</th>';
+                echo '<th>Sub Channel</th>';
+                echo '<th>Kategori</th>';
+                echo '<th>Sub Kategori</th>';
+                echo '<th>Backend</th>';
+                echo '<th>Remark</th>';
+                echo '<th>Feedback</th>';
+                echo '<th>Link evidence</th>';
+                echo '<th>Closed Date</th>';
+                echo '<th>Closed By</th>';
+                echo '<th>Bot Tiket</th>';
+                echo '<th>Created By</th>';
+                echo '<th>Prener</th>';
+                echo '<th>Email</th>';
+                echo '<th>Source(bot)</th>';
+                echo '<th>Source Email(bot)</th>';
+                echo '<th>Services</th>';
+                echo '<th>Regional</th>';
+                echo '<th>Witel</th>';
+              echo '</tr>';
+            echo '</thead>';
+            echo '<tbody>';
+              foreach($data as $d => $row):
+                $login = $connection->createCommand("SELECT * FROM user WHERE username='$row[login]'")->queryOne();
+                if($login){
+                  $user = $login['nama_lengkap'];
+                }else{
+                  $user = "";
+                }
+                $sub_channel = $connection->createCommand("SELECT * FROM sub_channel WHERE id_sub_channel='$row[sub_channel]'")->queryOne();
+                if($sub_channel){
+                  $subchannel = $sub_channel['nama_sub_channel'];
+                }else{
+                  $subchannel = "";
+                }
+                $kategori = $connection->createCommand("SELECT * FROM kategori WHERE id='$row[kategori]'")->queryOne();
+                if($kategori){
+                  $kat = $kategori['nama_kategori'];
+                }else{
+                  $kat = "";
+                }
+                $sub_kategori = $connection->createCommand("SELECT * FROM sub_kategori WHERE id='$row[sub_kategori]'")->queryOne();
+                if($sub_kategori){
+                  $subkat = $sub_kategori['sub_kategori'];
+                }else{
+                  $subkat = "";
+                }
+                $backend = $connection->createCommand("SELECT * FROM backend WHERE id='$row[backend]'")->queryOne();
+                if($backend){
+                  $backend_ = $backend['nama_backend'];
+                }else{
+                  $backend_ = "";
+                }
+                $user_tele = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$row[telegram_id]'")->queryOne();
+                if($row['status_owner'] != "Closed"):
+                  $date1 = date_create($row['tanggal_masuk']);
+                  $date2 = date_create(date('Y-m-d H:i:s'));
+                else:
+                  $date1 = date_create($row['tanggal_masuk']);
+                  $date2 = date_create($row['tanggal_closed']);
+                endif;
+                $interval = date_diff($date1,$date2);
+                $intv = $interval->format('%a');
+                if($row['gambar']){
+                  $evidence = Url::to('@web/images/'.$row['gambar'],true);
+                }else{
+                  $evidence = "";
+                }
+                $closedby = $connection->createCommand("SELECT * FROM user WHERE username='$row[closed_by]'")->queryOne();
+                if($closedby){
+                  $closed_by = $closedby['nama_lengkap'];
+                }else{
+                  $closed_by = "";
+                }
+                if($row['tanggal_closed'] == ''|| $row['tanggal_closed'] == NULL):
+                  $closed_date = '';
+                else:
+                  $closed_date = date('d-m-Y H:i:s', strtotime($row['tanggal_closed']));
+                endif;
+              echo '<tr>';
+                echo '<td>'.$user.'</td>';
+                echo '<td>'.date('d-m-Y H:i:s',strtotime($row['tanggal_masuk'])).'</td>';
+                echo '<td>'.$row['nama'].'</td>';
+                echo '<td>'.$row['inet'].'</td>';
+                echo '<td>'.$row['pstn'].'</td>';
+                echo '<td>'.$row['hp'].'</td>';
+                echo '<td>'.$row['email'].'</td>';
+                echo '<td>'.$row['status_owner'].'</td>';
+                echo '<td>'.$intv.'</td>';
+                echo '<td>'.$row['no_tiket'].'</td>';
+                echo '<td>'.$row['app_version'].'</td>';
+                echo '<td>'.$subchannel.'</td>';
+                echo '<td>'.$kat.'</td>';
+                echo '<td>'.$subkat.'</td>';
+                echo '<td>'.$backend_.'</td>';
+                echo '<td>'.$row['keluhan'].'</td>';
+                echo '<td>'.$row['feedback'].'</td>';
+                echo '<td>'.$evidence.'</td>';
+                echo '<td>'.$closed_date.'</td>';
+                echo '<td>'.$closed_by.'</td>';
+                echo '<td>'.$row['tiket'].'</td>';
+                echo '<td>'.$user_tele['nama_lengkap'].'</td>';
+                echo '<td>'.$user_tele['prener'].'</td>';
+                echo '<td>'.$user_tele['email'].'</td>';
+                echo '<td>'.$row['source'].'</td>';
+                echo '<td>'.$row['source_email'].'</td>';
+                echo '<td>'.$user_tele['layanan'].'</td>';
+                echo '<td>'.$user_tele['regional'].'</td>';
+                echo '<td>'.$user_tele['witel'].'</td>';
+              echo '</tr>';
+              endforeach;
+            echo '</tbody>';
+          echo '</table>';
+          exit;
+        endif;
+        return $this->redirect(['index']);
+    }
     
     public function actionRefresh_new($id)
     {
@@ -63,53 +215,69 @@ class UserController extends Controller
         $user = User::findOne(Yii::$app->user->id);
 
         if($id == NULL || $id == ''):
-            if($user->divisi == "MONITORING"):
-                $model0 = Cases::find()->where("status_owner='New' AND no_tiket IS NULL OR status_owner='New' AND no_tiket=''")->orderBy("rand()")->one();
-                if($model0 != NULL):
-                    $model0->status_owner='TO';
-                    $model0->login=$user->username;
-                    $model0->save(false);
+            // if($user->divisi == "MONITORING"):
+            //     $model0 = Cases::find()->where("status_owner='New' AND no_tiket IS NULL OR status_owner='New' AND no_tiket=''")->orderBy("rand()")->one();
+            //     if($model0 != NULL):
+            //         $model0->status_owner='TO';
+            //         $model0->login=$user->username;
+            //         $model0->save(false);
                     
-                    $connection->createCommand()->insert('list_progress_cases', [
-                        'cases' => $model0->id,
-                        'login' => $user->username,
-                        'status' => $model0->status_owner,
-                        'insert_date' => date('Y-m-d H:i:s')
-                    ])->execute();
-                endif;
-            elseif($user->divisi == "SOLVER"):
-                $model0 = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL OR status_owner='New' AND no_tiket<>''")->orderBy("rand()")->one();
-                if($model0 != NULL):
-                    $model0->status_owner='TO';
-                    $model0->login=$user->username;
-                    $model0->save(false);
+            //         $connection->createCommand()->insert('list_progress_cases', [
+            //             'cases' => $model0->id,
+            //             'login' => $user->username,
+            //             'status' => $model0->status_owner,
+            //             'insert_date' => date('Y-m-d H:i:s')
+            //         ])->execute();
+            //     endif;
+            // elseif($user->divisi == "SOLVER"):
+            //     $model0 = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL OR status_owner='New' AND no_tiket<>''")->orderBy("rand()")->one();
+            //     if($model0 != NULL):
+            //         $model0->status_owner='TO';
+            //         $model0->login=$user->username;
+            //         $model0->save(false);
                     
-                    $connection->createCommand()->insert('list_progress_cases', [
-                        'cases' => $model0->id,
-                        'login' => $user->username,
-                        'status' => $model0->status_owner,
-                        'insert_date' => date('Y-m-d H:i:s')
-                    ])->execute();
-                endif;
+            //         $connection->createCommand()->insert('list_progress_cases', [
+            //             'cases' => $model0->id,
+            //             'login' => $user->username,
+            //             'status' => $model0->status_owner,
+            //             'insert_date' => date('Y-m-d H:i:s')
+            //         ])->execute();
+            //     endif;
+            // endif;
+            $model0 = Cases::find()->where("status_owner='New' OR status_owner='New'")->orderBy("rand()")->one();
+            if($model0 != NULL):
+                $model0->status_owner='TO';
+                $model0->login=$user->username;
+                $model0->save(false);
+                
+                $connection->createCommand()->insert('list_progress_cases', [
+                    'cases' => $model0->id,
+                    'login' => $user->username,
+                    'status' => $model0->status_owner,
+                    'insert_date' => date('Y-m-d H:i:s')
+                ])->execute();
             endif;
             $model = Cases::find()->where("status_owner='TO' AND login='$user->username'")->one();
         else:
             $model = Cases::find()->where("id='$id'")->one();
         endif;
-        if($user->divisi=="MONITORING"):
-            $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-        elseif($user->divisi=="SOLVER"):
-            $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-        endif;
+        // if($user->divisi=="MONITORING"):
+        //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // elseif($user->divisi=="SOLVER"):
+        //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // endif;
+        $case_new = Cases::find()->where("status_owner='New' OR status_owner='TO'")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
         $case_onprogress = Cases::find()->where("status_owner='On Progress' AND login='$user->username'")->orderBy("DATE(tanggal_masuk) ASC")->all();
 
         $side = "A";
+        $report = new DatesearchForm;
         return $this->render('index', [
             'user' => $user,
             'case_new' => $case_new,
             'case_onprogress' => $case_onprogress,
             'model' => $model,
-            'side' => $side
+            'side' => $side,
+            'report' => $report
         ]);
     }
     public function actionGetRefresh()
@@ -143,9 +311,14 @@ class UserController extends Controller
                 if($gambar != NULL):
                     $gambar->saveAs('images/'.$imageName.'.'.$gambar->extension);
                     $model->feedback_gambar = $imageName.'.'.$gambar->extension;
+                    $model_a->feedback_gambar = $model->feedback_gambar;
                 endif;
+            else:
+              $model->feedback_gambar = "";
+              $model_a->feedback_gambar = $model->feedback_gambar;
             endif;
 
+            $model_a->feedback = $_POST['ListProgressCases']['feedback'];
             if($model->status == "Closed"):
                 $status_r = "CLOSED";
                 $model_a->closed_by = $user->username;
@@ -159,7 +332,7 @@ class UserController extends Controller
 
                     $diff=date_diff($date_awal,$date_closed);
                     $age = $diff->format("%a");
-                    $connection2->createCommand("UPDATE cases SET `status`='CLOSED', closed_date='$dateClose', closed_age='$age', closed_by='$user->username' WHERE id_case='$cek_rebeca[id_case]'")->execute();
+                    $connection2->createCommand("UPDATE cases SET `status`='CLOSED', closed_date='$dateClose', closed_age='$age', closed_by='$user->username', feedback_error='$model_a->feedback' WHERE id_case='$cek_rebeca[id_case]'")->execute();
                 endif;
             else:
                 $status_r = "ON PROGRESS";
@@ -183,6 +356,8 @@ class UserController extends Controller
                 if($cek_rebeca != NULL):
                     $tanggal = date('Y-m-d', strtotime($model->insert_date));
                     $waktu = date('H:i:s', strtotime($model->insert_date));
+
+                    $connection2->createCommand("UPDATE cases SET  feedback_error='$model->feedback' WHERE id_case='$cek_rebeca[id_case]'")->execute();
                     $up_log_case = $connection2->createCommand()->insert('log_update_case', [
                         'id_case' => $cek_rebeca['id_case'],
                         'date' => "$tanggal",
@@ -224,11 +399,12 @@ class UserController extends Controller
         $onProgress = ListProgressCases::find()->where("cases='$model_a->id'")->orderBy("id DESC")->all();
         $model = new ListProgressCases;
         
-        if($user->divisi=="MONITORING"):
-            $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-        elseif($user->divisi=="SOLVER"):
-            $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-        endif;
+        // if($user->divisi=="MONITORING"):
+        //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // elseif($user->divisi=="SOLVER"):
+        //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // endif;
+        $case_new = Cases::find()->where("status_owner='New' OR status_owner='TO'")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
         // $case_onprogress = Cases::find()->where("status_owner='On Progress'")->orderBy("DATE(tanggal_masuk) ASC")->all();
         $case_onprogress = Cases::find()->where("status_owner='On Progress' AND login='$user->username'")->orderBy("DATE(tanggal_masuk) ASC")->all();
 
@@ -258,6 +434,17 @@ class UserController extends Controller
         $model = Cases::findOne($id);
 
         if($model->load(Yii::$app->request->post())):
+            $category = $_POST['Cases']['kategori'];
+            $subCategory = $_POST['Cases']['sub_kategori'];
+            $backEnd = $_POST['Cases']['backend'];
+            $feedback = $_POST['Cases']['feedback'];
+            $statusOwner = $_POST['Cases']['status_owner'];
+
+            if(empty($category) || empty($subCategory) || empty($backEnd) || empty($feedback) || empty($statusOwner)){
+                Yii::$app->session->setFlash('error', "Periksa kembali form inputan!"); 
+                return $this->redirect('index');
+            }
+
             if($model->status_owner == "Closed" || $_POST['Cases']['status_owner'] == "Closed"):
                 $model->tanggal_closed = date('Y-m-d H:i:s');
                 $model->closed_by = $user->username;
@@ -292,10 +479,13 @@ class UserController extends Controller
             $model2->save(false);
 
             if($model->save(false)):
+
+              $tanggal = date('Y-m-d', strtotime($model->tanggal_masuk));
+              $waktu = date('H:i:s', strtotime($model->tanggal_masuk));
+
                 $cekCaserebeca = $connection2->createCommand("SELECT * FROM cases WHERE telebot_tiket='$model->tiket'")->queryOne();
-                $tanggal = date('Y-m-d', strtotime($model->tanggal_masuk));
-                $waktu = date('H:i:s', strtotime($model->tanggal_masuk));
                 $model2 = Cases::findOne($id);
+
                 if($model2->status_owner == "Closed"):
                     $closed_date = date('Y-m-d', strtotime($model->tanggal_closed));
                     $status_r = "CLOSED";
@@ -342,6 +532,7 @@ class UserController extends Controller
                       //'owner_group' => $model->owner_group
                     ])->execute();
 
+                    $cekCaserebeca = $connection2->createCommand("SELECT * FROM cases WHERE telebot_tiket='$model->tiket'")->queryOne();
                     // $cek_case_rebeca = $connection2->createCommand("SELECT * FROM cases WHERE nomor_tiket='$model->no_tiket'")->queryOne();
                     $insert_rebeca = $connection2->createCommand()->insert('log_update_case', [
                       'id_case' => $cekCaserebeca['id_case'],
@@ -397,11 +588,12 @@ class UserController extends Controller
           return $this->goHome();
       }
       $user = User::findOne(Yii::$app->user->id);
-      if($user->divisi=="MONITORING"):
-        $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-      elseif($user->divisi=="SOLVER"):
-        $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-      endif;
+    //   if($user->divisi=="MONITORING"):
+    //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+    //   elseif($user->divisi=="SOLVER"):
+    //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+    //   endif;
+      $case_new = Cases::find()->where("status_owner='New' OR status_owner='TO'")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
     //   $case_onprogress = Cases::find()->where("status_owner='On Progress'")->orderBy("DATE(tanggal_masuk) ASC")->all();
       $case_onprogress = Cases::find()->where("status_owner='On Progress' AND login='$user->username'")->orderBy("DATE(tanggal_masuk) ASC")->all();
 
@@ -409,13 +601,15 @@ class UserController extends Controller
       $last_update = ListProgressCases::find()->where("cases='$model->id'")->orderBy("id DESC")->all();
         
       $side = "A";
+      $report = new DatesearchForm;
       return $this->renderAjax('update-case',[
           'user' => $user,
           'case_new' => $case_new,
           'case_onprogress' => $case_onprogress,
           'model' => $model,
           'side' => $side,
-          'last_update' => $last_update
+          'last_update' => $last_update,
+          'report' => $report
       ]);
     }
 
@@ -537,11 +731,12 @@ class UserController extends Controller
             return $this->goHome();
         }
         $user = User::findOne(Yii::$app->user->id);
-        if($user->divisi=="MONITORING"):
-            $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-        elseif($user->divisi=="SOLVER"):
-            $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-        endif;
+        // if($user->divisi=="MONITORING"):
+        //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // elseif($user->divisi=="SOLVER"):
+        //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // endif;
+        $case_new = Cases::find()->where("status_owner='New' OR status_owner='TO'")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
         $case_onprogress = Cases::find()->where("status_owner='On Progress' AND login='$user->username'")->orderBy("DATE(tanggal_masuk) ASC")->all();
 
         $model = Cases::findOne($id);
@@ -636,20 +831,24 @@ class UserController extends Controller
         $user = User::findOne(Yii::$app->user->id);
         
         $model = Cases::find()->where("status_owner='TO' AND login='$user->username'")->orderBy("login ASC")->one();
-        if($user->divisi=="MONITORING"):
-            $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-        elseif($user->divisi=="SOLVER"):
-            $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-        endif;
+        $case_new = Cases::find()->where("status_owner='New'  OR status_owner='TO' ")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // if($user->divisi=="MONITORING"):
+        //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // elseif($user->divisi=="SOLVER"):
+        //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // endif;
         $case_onprogress = Cases::find()->where("status_owner='On Progress' AND login='$user->username'")->orderBy("DATE(tanggal_masuk) ASC")->all();
 
         $side = "A";
+
+        $report = new DatesearchForm;
         return $this->render('index', [
             'user' => $user,
             'case_new' => $case_new,
             'case_onprogress' => $case_onprogress,
             'model' => $model,
-            'side' => $side
+            'side' => $side,
+            'report' => $report
         ]);
     }
 
@@ -660,57 +859,74 @@ class UserController extends Controller
             Yii::$app->user->logout();
             return $this->goHome();
         }
-        
         $user = User::findOne(Yii::$app->user->id);
 
         $model = Cases::find()->where("status_owner='TO' AND login='$user->username' || status_owner='On Progress' AND login='$user->username'")->all();
         if($model == NULL):
-            if($user->divisi=="MONITORING"):
-                $model0 = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket=''")->orderBy("rand()")->one();
-                if($model0 != NULL):
-                    $model0->status_owner='TO';
-                    $model0->login=$user->username;
-                    $model0->save(false);
+            // if($user->divisi=="MONITORING"):
+            //     $model0 = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket not like 'IN%'")->orderBy("rand()")->one();
+            //     if($model0 != NULL):
+            //         $model0->status_owner='TO';
+            //         $model0->login=$user->username;
+            //         $model0->save(false);
                     
-                    $connection->createCommand()->insert('list_progress_cases', [
-                        'cases' => $model0->id,
-                        'login' => $user->username,
-                        'status' => $model0->status_owner,
-                        'insert_date' => date('Y-m-d H:i:s')
-                    ])->execute();
-                endif;
-            elseif($user->divisi=="SOLVER"):
-                $model0 = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("rand()")->one();
-                if($model0 != NULL):
-                    $model0->status_owner='TO';
-                    $model0->login=$user->username;
-                    $model0->save(false);
+            //         $connection->createCommand()->insert('list_progress_cases', [
+            //             'cases' => $model0->id,
+            //             'login' => $user->username,
+            //             'status' => $model0->status_owner,
+            //             'insert_date' => date('Y-m-d H:i:s')
+            //         ])->execute();
+            //     endif;
+            // elseif($user->divisi=="SOLVER"):
+            //     $model0 = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket like '%IN%'")->orderBy("rand()")->one();
+            //     if($model0 != NULL):
+            //         $model0->status_owner='TO';
+            //         $model0->login=$user->username;
+            //         $model0->save(false);
                     
-                    $connection->createCommand()->insert('list_progress_cases', [
-                        'cases' => $model0->id,
-                        'login' => $user->username,
-                        'status' => $model0->status_owner,
-                        'insert_date' => date('Y-m-d H:i:s')
-                    ])->execute();
-                endif;
+            //         $connection->createCommand()->insert('list_progress_cases', [
+            //             'cases' => $model0->id,
+            //             'login' => $user->username,
+            //             'status' => $model0->status_owner,
+            //             'insert_date' => date('Y-m-d H:i:s')
+            //         ])->execute();
+            //     endif;
+            // endif;
+            $model0 = Cases::find()->where("status_owner='New'")->orderBy("rand()")->one();
+            if($model0 != NULL):
+                $model0->status_owner='TO';
+                $model0->login=$user->username;
+                $model0->save(false);
+                
+                $connection->createCommand()->insert('list_progress_cases', [
+                    'cases' => $model0->id,
+                    'login' => $user->username,
+                    'status' => $model0->status_owner,
+                    'insert_date' => date('Y-m-d H:i:s')
+                ])->execute();
             endif;
         endif;
-        if($user->divisi=="MONITORING"):
-            $model = Cases::find()->where("status_owner='TO' AND login='$user->username' AND no_tiket IS NULL AND no_tiket=''")->orderBy("login ASC")->one();
-            $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL OR status_owner='TO' AND no_tiket IS NULL OR status_owner='New' AND no_tiket='' OR status_owner='TO' AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-        elseif($user->divisi=="SOLVER"):
-            $model = Cases::find()->where("status_owner='TO' AND login='$user->username' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("login ASC")->one();
-            $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket<>'' AND no_tiket IS NOT NULL")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
-        endif;
+        // if($user->divisi=="MONITORING"):
+        //     $model = Cases::find()->where("status_owner='TO' AND login='$user->username' AND no_tiket IS NULL AND no_tiket=''")->orderBy("login ASC")->one();
+        //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL OR status_owner='TO' AND no_tiket IS NULL OR status_owner='New' AND no_tiket='' OR status_owner='TO' AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // elseif($user->divisi=="SOLVER"):
+        //     $model = Cases::find()->where("status_owner='TO' AND login='$user->username' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("login ASC")->one();
+        //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket<>'' AND no_tiket IS NOT NULL")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+        // endif;
+        $model = Cases::find()->where("status_owner='TO' AND login='$user->username'")->orderBy("login ASC")->one();
+        $case_new = Cases::find()->where("status_owner='New' OR status_owner='TO' OR status_owner='New' OR status_owner='TO'")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
+
         $case_onprogress = Cases::find()->where("status_owner='On Progress' AND login='$user->username'")->orderBy("DATE(tanggal_masuk) ASC")->all();
 
         $side = "A";
+        $report = new DatesearchForm;
         return $this->render('index', [
             'user' => $user,
             'case_new' => $case_new,
             'case_onprogress' => $case_onprogress,
             'model' => $model,
-            'side' => $side
+            'side' => $side,
+            'report' => $report
         ]);
     }
 

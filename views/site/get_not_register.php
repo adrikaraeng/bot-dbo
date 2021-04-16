@@ -3,10 +3,17 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-    $keyboard = [
-        'remove_keyboard' => true
+    $keyboard = [ 
+        'resize_keyboard' => true,
+        "keyboard" =>[
+            [
+                [
+                    'text' => "Daftar",
+                ]
+            ]
+        ]
     ];
-    Yii::$app->telegram->sendMessage("Hi ".$nama_depan."\xF0\x9F\x99\x8F,\nSilahkan registrasi terlebih dahulu,\nKontak kami di @DBOmyIndihome.", $chat_id, [
+    Yii::$app->telegram->sendMessage("Hai <b>".$nama_depan."</b>\xF0\x9F\x99\x8F\nAnda belum terdaftar dan belum bisa menggunakan @tiketmyindihomebot, silahkan daftar terlebih dahulu.", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
 ?>

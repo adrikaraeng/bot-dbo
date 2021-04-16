@@ -42,7 +42,9 @@ class AppAsset extends AssetBundle
         // 'morrisjs/morris.min.js',
         'js/raphael-min.js',
         // 'js/prettify.min.js',
-        'wow/dist/wow.min.js'
+        'wow/dist/wow.min.js',
+        'js/webcam.js'
+        // 'js/webcam.min.js'
     ];
     public $depends = [
         'yii\web\YiiAsset',

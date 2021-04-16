@@ -11,7 +11,7 @@ use yii\helpers\Url;
                 ['text' => "C4"],
 			],
 			[
-                ['text' => "Social Media"],
+                ['text' => "Sosial Media"],
                 ['text' => "Plasa Telkom"],
 			],
 			[

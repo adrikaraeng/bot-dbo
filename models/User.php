@@ -23,7 +23,7 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
         return [
             [['username', 'password', 'nama_lengkap'], 'required','message'=>''],
             [['username','inisial'],'unique'],
-            [['level','status','divisi'], 'string'],
+            [['level','status','divisi','webcam'], 'string'],
             [['accessToken','authKey'], 'safe'],
             [['username'], 'string', 'max' => 50],
             [['nama_lengkap'], 'string', 'max' => 200]

@@ -10,8 +10,26 @@ use yii\bootstrap\NavBar;
 use yii\widgets\Breadcrumbs;
 use app\assets\AppAsset;
 
+$connection = \Yii::$app->db;
+if (Yii::$app->user->isGuest) {
+  Yii::$app->user->logout();
+  return $this->goHome();
+}
+$id = Yii::$app->user->id;
+// echo $id;
+$duser = $connection->createCommand("SELECT * FROM user WHERE id='$id'")->queryOne(); 
+
 AppAsset::register($this);
 ?>
+<style>
+  #webcam-pic{
+    position: fixed;
+    z-index:999999999999;
+    top:3px;
+    right:20px;
+  }
+
+</style>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
 <html lang="<?= Yii::$app->language ?>">
@@ -29,7 +47,7 @@ AppAsset::register($this);
 <div class="wrap">
     <?php
     NavBar::begin([
-        'brandLabel' => "Monitor Telegram Case",
+        'brandLabel' => "<b id='dashboard-title'>Manohara</b>",
         'brandUrl' => '',
         'options' => [
             'class' => 'navbar-default navbar-fixed-top',
@@ -57,18 +75,17 @@ AppAsset::register($this);
     NavBar::end();
     ?>
 
-    <div class="container">
+    <div id="webcam-pic" class="wow tada" data-wow-iteration="infinite"  data-wow-duration="1800ms">
+      <?php if($duser['webcam'] != ''):?>
+        <?=Html::img("@web/images/webcam/".$duser['webcam'],['style'=>"width:60px;height:60px;border-radius:50px;border:2px solid #0005d2;"])?>
+      <?php else:?>
+        <?=Html::img("@web/images/webcam/default.png",['style'=>"width:60px;height:60px;border-radius:50px;border:2px solid #0005d2;"])?>
+      <?php endif;?>
+    </div>
+    <div class="my-container">
         <?= $content ?>
     </div>
 </div>
-
-<footer class="footer">
-    <div class="container">
-        <p class="pull-left">&copy; DBO IT Dev<?= date('Y') ?></p>
-
-        <p class="pull-right">Monitor Telegram Case Version 0.0.1</p>
-    </div>
-</footer>
 
 <?php $this->endBody() ?>
 </body>

@@ -10,11 +10,14 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
 use app\models\Cases;
+use app\models\User;
 use app\models\TempCases;
 use app\models\ListProgressCases;
 use app\models\Cases2;
+use app\models\UserTelegram;
 use mirkhamidov\telegramBot\TelegramBot;
-use  yii\web\Session;
+use yii\web\Session;
+use yii\helpers\Url;
 
 class SiteController extends Controller
 {
@@ -89,10 +92,11 @@ class SiteController extends Controller
             'text' => 'testing abcd',
         ]);
     }
+
     public function actionIndex()
     {
       $this->layout = "main-start";
-
+      
       $connection = \Yii::$app->db;
       $data = Yii::$app->telegram->hook();
       
@@ -103,7 +107,6 @@ class SiteController extends Controller
 
       $kategori = $connection->createCommand("SELECT * FROM kategori WHERE nama_kategori='$cek_kategori[kategori]'")->queryOne();
       $cek_case = $connection->createCommand("SELECT * FROM cases WHERE gambar IS NULL ORDER BY id DESC")->queryOne();
-      $cek_used_check_ticket = $connection->createCommand("SELECT * FROM temp_cek_ticket WHERE cek_ticket='1'")->queryOne();
 
       $user = $data['message']['from']['id'];
       $cek_available = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$user' AND status='on'")->queryOne();
@@ -120,18 +123,159 @@ class SiteController extends Controller
           $username = $data['message']['chat']['username'];
           $text = $data['message']['text'];
 
+          $cek_used_check_ticket = $connection->createCommand("SELECT * FROM temp_cek_ticket WHERE cek_ticket='1' AND telegram_id='$user_tele'")->queryOne();
           $session_db = $connection->createCommand("SELECT * FROM session_bot WHERE my_session IS NOT NULL AND telegram_id='$user_tele'")->queryOne();
           $cek_user_actived = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$user_tele' AND `status`='on'")->queryOne();
           $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
 
           $cek_ticket = $connection->createCommand("SELECT * FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->queryOne();
 
-
           if(empty($cek_user_actived)):
-            return $this->render('get_not_register',[
+            // $cek_user_reg = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$user_tele' AND status_reg > '0'")->queryOne();
+            $session_reg = $connection->createCommand("SELECT * FROM session_reg WHERE telegram_id='$user_tele'")->queryOne();
+
+            $cek_user_off = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$user_tele' AND `status`='off'")->queryOne();
+
+            if($text == 'Daftar' && empty($session_reg)):
+
+              if(empty($cek_user_off)):
+                $connection->createCommand()->insert('session_reg',[
+                  'telegram_id' => $user_tele,
+                  'tahap' => '1'
+                ])->execute();
+
+                return $this->render('get_format_reg',[
+                  'chat_id' => $chat_id,
+                  'nama_depan' => $nama_depan
+                ]);
+              else:
+                return $this->render('get_exist_user',[
+                  'chat_id' => $chat_id,
+                  'nama_depan' => $nama_depan
+                ]);
+              endif;
+            elseif($session_reg['tahap'] == '1' && substr_count($text, "#") != '7' && $text != 'Cancel'):
+              return $this->render('get_invalid_format_reg',[
                 'chat_id' => $chat_id,
                 'nama_depan' => $nama_depan
-            ]);
+              ]);
+            elseif($session_reg['tahap'] == '1' && $text=='Cancel'):
+              $connection->createCommand("DELETE FROM session_reg WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM session_bot WHERE telegram_id='$user_tele'")->execute();
+              return $this->render('get_cancel_register',[
+                  'chat_id' => $chat_id,
+                  'nama_depan' => $nama_depan
+              ]);
+            elseif($session_reg['tahap'] == '1' && substr_count($text, "#") == '7'):
+              
+              $data = explode("#", $text);
+
+              $nama = $data[1];
+              $email = $data[2];
+              $hp = $data[3];
+              $regional = $data[4];
+              $witel = $data[5];
+              $layanan = $data[6];
+              $prener = $data[7];
+
+              $rand_aktivasi = mt_rand(100000, 999999);
+
+              $cek_data = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$user_tele'")->queryOne();
+              if(empty($cek_data) && !empty($nama) && !empty($email) && !empty($hp) && !empty($regional) && !empty($witel) && !empty($layanan) && !empty($prener) && strlen($nama) >= '3' && strlen($email) >= '3' && strlen($hp) >= '6'){
+                $sql_new = $connection->createCommand()->insert('user_telegram',[
+                  'telegram_id' => $user_tele,
+                  'nama_lengkap' => $nama,
+                  'no_handphone' => $hp,
+                  'email' => $email,
+                  'regional' => $regional,
+                  'witel' => $witel,
+                  'layanan' => $layanan,
+                  'prener' => $prener,
+                  'aktivasi' => $rand_aktivasi,
+                  'reg_date' => date('Y-m-d H:i:s'),
+                  'status' => "off"
+                ])->execute();
+  
+                $tomail = trim(preg_replace('/\s+/', ' ',$email));
+                // $tomail = preg_replace('/\s+/', ' ', $email);
+
+                \Yii::$app->mailer->compose()
+                ->setFrom("tiketmyindihomebot@gmail.com")
+                ->setTo($tomail)
+                ->setSubject("Aktivasi Tiket myIndiHome bot")
+                ->setTextBody("Plain text content")
+                ->setHtmlBody("<b>Hai ".$nama."</b>,<br>Berikut kode OTP anda:<br><b>".$rand_aktivasi."</b> <br><br><b>Best Regard</b><br>#DBOmyIndiHome<br>Terima kasih")
+                ->send();
+
+                $connection->createCommand("UPDATE session_reg SET tahap='2' WHERE telegram_id='$user_tele'")->execute();
+                // $connection->createCommand("UPDATE user_telegram SET status_reg='1' WHERE telegram_id='$user_tele'")->queryOne();
+
+                return $this->render('get_kode_aktivasi',[
+                  'chat_id' => $chat_id,
+                  'nama_depan' => $nama_depan
+                ]);
+              }else{
+                return $this->render('get_invalid_format_reg',[
+                  'chat_id' => $chat_id,
+                  'nama_depan' => $nama_depan
+                ]);
+              }
+            elseif($text=="Resend" && $session_reg['tahap'] == '2'):
+
+              $rand_aktivasi = mt_rand(100000, 999999);
+              $connection->createCommand("UPDATE user_telegram SET aktivasi='$rand_aktivasi' WHERE telegram_id='$user_tele'")->execute();
+              $model = UserTelegram::find()->where(['telegram_id' => $user_tele])->asArray()->one();
+
+              $tomail = trim(preg_replace('/\s+/', ' ', $model['email']));
+              
+              \Yii::$app->mailer->compose()
+              ->setFrom("tiketmyindihomebot@gmail.com")
+              ->setTo($tomail)
+              ->setSubject("Aktivasi Tiket myIndiHome bot")
+              ->setTextBody("Plain text content")
+              ->setHtmlBody("<b>Hai ".$model['nama_lengkap']."</b>,<br>Berikut kode OTP anda:<br><b>".$model['aktivasi']."</b> <br><br><b>Best Regard</b><br>#DBOmyIndiHome<br>Terima kasih")
+              ->send();
+
+              return $this->render('get_kode_aktivasi',[
+                'chat_id' => $chat_id,
+                'nama_depan' => $nama_depan,
+                'model' => $model
+              ]);
+            elseif($cek_user_off && $session_reg['tahap'] == '2' && $text !="Exit"):
+              $model = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$user_tele'")->queryOne();
+            
+              if($model['aktivasi'] == $text && strlen(preg_replace("/([^0-9]+)/","",$text)) == "6"):
+                $connection->createCommand("UPDATE user_telegram SET `status`='on' WHERE telegram_id='$user_tele'")->execute();
+                $connection->createCommand("DELETE FROM session_reg WHERE telegram_id='$user_tele'")->execute();
+                return $this->render('get_sukses_daftar',[
+                  'chat_id' => $chat_id,
+                  'nama_depan' => $nama_depan
+                ]);
+              else:
+                return $this->render('get_invalid_aktivasi',[
+                  'chat_id' => $chat_id,
+                  'nama_depan' => $nama_depan
+                ]);
+               endif;
+            elseif($text=="Exit" && $session_reg['tahap'] == '1' || $text=="Exit" && $session_reg['tahap'] == '2' || $cek_user_off['telegram_id'] == $user_tele && $session_reg['tahap'] == '1' || $cek_user_off['telegram_id'] == $user_tele && $session_reg['tahap'] == '2'):
+              $connection->createCommand("DELETE FROM session_reg WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM user_telegram WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM session_bot WHERE telegram_id='$user_tele'")->execute();
+              return $this->render('get_not_register',[
+                  'chat_id' => $chat_id,
+                  'nama_depan' => $nama_depan
+              ]);
+            else:
+              $connection->createCommand("DELETE FROM session_reg WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM session_bot WHERE telegram_id='$user_tele'")->execute();
+              return $this->render('get_not_register',[
+                  'chat_id' => $chat_id,
+                  'nama_depan' => $nama_depan
+              ]);
+            endif;
             die();
           endif;
 
@@ -150,87 +294,110 @@ class SiteController extends Controller
                 'nama_depan' => $nama_depan
             ]);
           endif;
-
+          $cek_ticket = $connection->createCommand("SELECT * FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->queryOne();
           switch(true):
-            case (is_numeric($text) && $cek_used_check_ticket != NULL && strlen($text) == '8' && $cek_ticket):
+            case (strlen($text) == '10' && $cek_user_actived && $cek_ticket || strlen($text) == '8' && $cek_user_actived && $cek_ticket):
+              
+              $text = preg_replace("/[^0-9]/", "", $text);
               
               $sql_tiket = Cases::find()->where("tiket='$text'")->one();
+              if(!is_numeric($text) || empty($sql_tiket)){
+                return $this->render('get_notfound_ticket',[
+                    'chat_id' => $chat_id,
+                    'nama_depan' => $nama_depan,
+                    'tiket' => $text
+                ]);
+                die();
+              }
               if(!empty($sql_tiket->tiket)):
-                  $progress = ListProgressCases::find()->where(['cases'=>$sql_tiket->id])->orderBy('id DESC')->one();
 
-                  if($sql_tiket->status_owner == "On Progress"):
+                  if($sql_tiket->status_owner != "Closed"):
                     $update = $connection->createCommand("UPDATE cases SET follow_up=follow_up+1 WHERE id='$sql_tiket->id'")->execute();
                   endif;
-                  if(!empty($progress)):
-                      if($progress->status == "Closed" && $sql_tiket->status_owner == "Closed"):
+                  // $sql_progress_tiket = ListProgressCases::find()->where(['cases'=>$sql_tiket->id])->orderBy('id DESC')->one();
+                  
+                  // if($sql_progress_tiket->feedback_gambar == NULL || $sql_progress_tiket->feedback_gambar):
+                  //   $gambar = "";
+                  // else:
+                  //   $gambar = $sql_progress_tiket->feedback_gambar;    
+                  // endif;
+
+                  if($sql_tiket->feedback != '' || $sql_tiket->feedback != NULL):
+                      if($sql_tiket->status_owner == "Closed"):
                         $status = "Closed";
-                      elseif($progress->status == "On Progress" && $sql_tiket->status_owner != "Closed" || $progress->status == "On Progress" && $sql_tiket->status_owner != "New"):
+                      else:
                         $status = "On Progress";
-                      elseif($progress->status == "On Progress" && $sql_tiket->status_owner != "New"):
-                        $status = "Being Processed";
                       endif;
 
-                      if($progress->feedback == NULL || $progress->feedback == ''):
-                          $feedback = "Masih dalam tahap pengecekan, silahkan di cek kembali 5 menit kedepan. Terima kasih";
+                      if($sql_tiket->feedback == '' || $sql_tiket->feedback == NULL):
+                        $feedback = "Masih dalam tahap pengecekan, silahkan di cek kembali 5 menit kedepan. Terima kasih";
                       else:
-                          $feedback = $progress->feedback;
+                        $feedback = $sql_tiket->feedback;
                       endif;
 
                       return $this->render('get_status_ticket',[
-                          'chat_id' => $cek_used_system['chat_id'],
-                          'tiket' => $sql_tiket->tiket,
-                          'nama_pelanggan' => $sql_tiket->nama,
-                          'gambar' => $progress->feedback_gambar,
-                          'keluhan' => $sql_tiket->keluhan,
-                          'status' => $status,
-                          'feedback' => $feedback,
-                          'user_tele' => $cek_used_system['telegram_id']
+                        'chat_id' => $cek_used_system['chat_id'],
+                        'tiket' => $sql_tiket->tiket,
+                        'nama_pelanggan' => $sql_tiket->nama,
+                        'gambar' => $sql_tiket->feedback_gambar,
+                        'keluhan' => $sql_tiket->keluhan,
+                        'status' => $status,
+                        'feedback' => $feedback,
+                        'user_tele' => $cek_used_system['telegram_id']
                       ]);
                   else:
                     // $count_fu = is_numeric($sql_tiket->follow_up) +1;
                     $update = $connection->createCommand("UPDATE cases SET follow_up=follow_up+1 WHERE id='$sql_tiket->id'")->execute();
 
                       return $this->render('get_status_ticket',[
-                          'chat_id' => $cek_used_system['chat_id'],
-                          'tiket' => $sql_tiket->tiket,
-                          'nama_pelanggan' => $sql_tiket->nama,
-                          'gambar' => NULL,
-                          'keluhan' => $sql_tiket->keluhan,
-                          'status' => "Being Process",
-                          'feedback' => "Masih dalam tahap proses pengecekan. Silahkan di cek kembali 5 menit kedepan",
-                          'user_tele' => $cek_used_system['telegram_id']
+                        'chat_id' => $cek_used_system['chat_id'],
+                        'tiket' => $sql_tiket->tiket,
+                        'nama_pelanggan' => $sql_tiket->nama,
+                        'gambar' => NULL,
+                        'keluhan' => $sql_tiket->keluhan,
+                        'status' => "Being Process",
+                        'feedback' => "Masih dalam tahap proses pengecekan. Silahkan di cek kembali 5 menit kedepan",
+                        'user_tele' => $cek_used_system['telegram_id']
                       ]);
                   endif;
               else:
                   return $this->render('get_notfound_ticket',[
-                      'chat_id' => $chat_id,
-                      'nama_depan' => $nama_depan,
-                      'tiket' => $text
+                    'chat_id' => $chat_id,
+                    'nama_depan' => $nama_depan,
+                    'tiket' => $text
                   ]);
               endif;
               break;
-            case (is_numeric($text) && strlen($text) != '8' && $cek_user_actived && $cek_ticket):
+            case ($text != 'Cek Tiket' && strlen($text) != '10' && $cek_user_actived && $cek_ticket && $text != "Exit"):
               $connection->createCommand("DELETE FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->execute();
               $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
 
               return $this->render('get_notfound_ticket',[
-                  'chat_id' => $cek_used_system['chat_id'],
-                  'nama_depan' => $cek_used_system['first_name'],
-                  'tiket' => $text
+                'chat_id' => $cek_used_system['chat_id'],
+                'nama_depan' => $cek_used_system['first_name'],
+                'tiket' => $text
               ]);
               break;
-            case ($text == 'Check Ticket' && $cek_user_actived ):
-                
+            case ($text == 'Cek Tiket' && $cek_user_actived):
+              
               $sql = $connection->createCommand()->insert('temp_cek_ticket', [
                   'cek_ticket' => '1',
                   'telegram_id' => $user_tele
               ])->execute();
 
+              $connection->createCommand("DELETE FROM temp_source WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_kategori WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_email WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM session_bot WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_cases WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM session_reg WHERE telegram_id='$user_tele'")->execute();
+
               $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
 
               return $this->render('get_ticket',[
-                  'chat_id' => $cek_used_system['chat_id'],
-                  'nama_depan' => $cek_used_system['first_name']
+                'chat_id' => $cek_used_system['chat_id'],
+                'nama_depan' => $cek_used_system['first_name']
               ]);
               break;
             case ($text == 'Skip >>' && $cek_user_actived && $session_db['my_session'] == "6"):
@@ -285,13 +452,21 @@ class SiteController extends Controller
                 'nama_depan' => $cek_used_system['first_name']
               ]);
               break;
-            case (/*strpos($text, 'ase#') >= 0 && */$cek_user_actived && $session_db['my_session'] == '5'):
+            case ($cek_user_actived && $session_db['my_session'] == '5'):
               $text = str_replace("\n","",$text);
               $char = ord("#");
               $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
 
                 switch(true):
+                  case (substr_count($text, "#") != '7' && $cek_user_actived && $session_db['my_session'] == '5'):
+                    return $this->render('get_invalid_case',[
+                      'chat_id' => $cek_used_system['chat_id'],
+                      'nama_depan' => $cek_used_system['first_name']
+                    ]);
                   case (substr_count($text, "#") == '7' && $cek_user_actived && $session_db['my_session'] == '5'):
+                    
+                    $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
+
                     $datas = explode(chr($char), $text);
 
                     $nama = $datas[1];
@@ -305,91 +480,97 @@ class SiteController extends Controller
 
                     // $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
                             
-                    if($nama == '' || $email == '' || $hp == '' || $keluhan == ''):
-                      return $this->render('get_case',[
+                    $value = strtotime($now);
+                    $cek_tiket_db = $connection->createCommand("SELECT * FROM cases WHERE tiket='$value'")->queryOne();
+
+                    if($cek_tiket_db):
+                      return $this->render('get_case2',[
                         'chat_id' => $cek_used_system['chat_id'],
                         'nama_depan' => $cek_used_system['first_name']
                       ]);
-                    endif;
-                
-                    $value = mt_rand(10000000, 99999999);
-                    $cek_tiket_db = $connection->createCommand("SELECT * FROM cases WHERE tiket='$value'")->queryOne();
-                    if($cek_tiket_db):
-                        $value = mt_rand(10000000, 99999999);
-                    endif;
-                
-                    $connection->createCommand("UPDATE session_bot SET my_session='6' WHERE telegram_id='$user_tele'")->execute();
+                    else:
+                      if($nama == '' || $email == '' || $hp == '' || $keluhan == ''):
+                        return $this->render('get_invalid_case',[
+                          'chat_id' => $cek_used_system['chat_id'],
+                          'nama_depan' => $cek_used_system['first_name']
+                        ]);
+                      endif;
+                  
+                      $connection->createCommand("UPDATE session_bot SET my_session='6' WHERE telegram_id='$user_tele'")->execute();
 
-                    $source = $connection->createCommand("SELECT * FROM temp_source WHERE telegram_id='$user_tele'")->queryOne();
-                    $sub_channel = $connection->createCommand("SELECT * FROM sub_channel WHERE nama_sub_channel='$source[source]' AND id_channel='4'")->queryOne();
-                    
-                    $kategori = $connection->createCommand("SELECT * FROM temp_kategori WHERE telegram_id='$user_tele'")->queryOne();
-                    $cek_kategori = $connection->createCommand("SELECT * FROM kategori WHERE nama_kategori='$kategori[kategori]'")->queryOne();
-                    
-                    $version = $connection->createCommand("SELECT * FROM temp_app_version WHERE telegram_id='$user_tele'")->queryOne();
+                      $source = $connection->createCommand("SELECT * FROM temp_source WHERE telegram_id='$user_tele'")->queryOne();
 
-                    $temp_email = $connection->createCommand("SELECT * FROM temp_email WHERE telegram_id='$user_tele'")->queryOne();
+                      $sub_channel = $connection->createCommand("SELECT * FROM sub_channel WHERE nama_sub_channel='$source[source]' AND id_channel='4'")->queryOne();
+                      
+                      $kategori = $connection->createCommand("SELECT * FROM temp_kategori WHERE telegram_id='$user_tele'")->queryOne();
 
-                    $case = new TempCases;
-                    $case->tiket = $value;
-                    $case->nama = $nama;
-                    $case->email = $email;
-                    $case->hp = $hp;
-                    $case->pstn = $pstn;
-                    $case->inet = $inet;
-                    $case->no_tiket = $no_tiket;
-                    $case->app_version = $version['version'];
-                    $case->keluhan = $keluhan;
-                    $case->channel = '4';
-                    $case->sub_channel = $sub_channel['id_sub_channel'];
-                    $case->kategori = $cek_kategori['id'];
-                    $case->tanggal_masuk = $now;
-                    $case->source = $source['source'];
-                    $case->source_email = $temp_email['email'];
-                    $case->status_owner = 'New';
-                    $case->urgensi_status = 'Normal';
-                    $case->telegram_id = $user_tele;
-                    $case->save(false);
-                    
-                    $cek_exist_case = $connection->createCommand("SELECT * FROM cases WHERE nama='$nama' AND hp='$hp' AND email='$email' AND app_version='$version[version]' AND kategori='$cek_kategori[id]' AND status_owner!='Closed'")->queryOne();
+                      $cek_kategori = $connection->createCommand("SELECT * FROM kategori WHERE nama_kategori='$kategori[kategori]'")->queryOne();
+                      
+                      $version = $connection->createCommand("SELECT * FROM temp_app_version WHERE telegram_id='$user_tele'")->queryOne();
 
-                    if(!empty($cek_exist_case)){
-                      return $this->render('get_choose_created_double',[
-                        'chat_id' => $cek_used_system['chat_id'],
-                        'nama_depan' => $cek_used_system['first_name'],
-                        'tiket' => $cek_exist_case['tiket'],
-                        'keluhan' => $cek_exist_case['keluhan'],
-                      ]);
-                    }else{
-                      $get_case = $connection->createCommand("SELECT * FROM temp_cases WHERE telegram_id='$user_tele'")->queryOne();
+                      $temp_email = $connection->createCommand("SELECT * FROM temp_email WHERE telegram_id='$user_tele'")->queryOne();
 
-                      $case = new Cases2;
-                      $case->tiket = $get_case['tiket'];
-                      $case->nama = $get_case['nama'];
-                      $case->email = $get_case['email'];
-                      $case->hp = $get_case['hp'];
-                      $case->pstn = $get_case['pstn'];
-                      $case->inet = $get_case['inet'];
-                      $case->no_tiket = $get_case['no_tiket'];
-                      $case->keluhan = $get_case['keluhan'];
-                      $case->app_version = $get_case['app_version'];
+                      $case = new TempCases;
+                      $case->tiket = $value;
+                      $case->nama = $nama;
+                      $case->email = $email;
+                      $case->hp = $hp;
+                      $case->pstn = $pstn;
+                      $case->inet = $inet;
+                      $case->no_tiket = $no_tiket;
+                      $case->app_version = $version['version'];
+                      $case->keluhan = $keluhan;
                       $case->channel = '4';
-                      $case->sub_channel = $get_case['sub_channel'];
-                      $case->kategori = $get_case['kategori'];
+                      $case->sub_channel = $sub_channel['id_sub_channel'];
+                      $case->kategori = $cek_kategori['id'];
                       $case->tanggal_masuk = $now;
-                      $case->source = $get_case['source'];
-                      $case->source_email = $get_case['email'];
+                      $case->source = $source['source'];
+                      $case->source_email = $temp_email['email'];
                       $case->status_owner = 'New';
                       $case->urgensi_status = 'Normal';
                       $case->telegram_id = $user_tele;
-                      $case->follow_up = '0';
                       $case->save(false);
+                      
+                      $cek_exist_case = $connection->createCommand("SELECT * FROM cases WHERE nama='$nama' AND hp='$hp' AND email='$email' AND app_version='$version[version]' AND kategori='$cek_kategori[id]' AND status_owner!='Closed'")->queryOne();
 
-                      return $this->render('get_pictures',[
-                        'chat_id' => $cek_used_system['chat_id'],
-                        'nama_depan' => $cek_used_system['first_name']
-                      ]);
-                    }
+                      if(!empty($cek_exist_case)){
+                        return $this->render('get_choose_created_double',[
+                          'chat_id' => $cek_used_system['chat_id'],
+                          'nama_depan' => $cek_used_system['first_name'],
+                          'tiket' => $cek_exist_case['tiket'],
+                          'keluhan' => $cek_exist_case['keluhan'],
+                        ]);
+                      }else{
+                        $get_case = $connection->createCommand("SELECT * FROM temp_cases WHERE telegram_id='$user_tele'")->queryOne();
+
+                        $case = new Cases2;
+                        $case->tiket = $get_case['tiket'];
+                        $case->nama = $get_case['nama'];
+                        $case->email = $get_case['email'];
+                        $case->hp = $get_case['hp'];
+                        $case->pstn = $get_case['pstn'];
+                        $case->inet = $get_case['inet'];
+                        $case->no_tiket = $get_case['no_tiket'];
+                        $case->keluhan = $get_case['keluhan'];
+                        $case->app_version = $get_case['app_version'];
+                        $case->channel = '4';
+                        $case->sub_channel = $get_case['sub_channel'];
+                        $case->kategori = $get_case['kategori'];
+                        $case->tanggal_masuk = $now;
+                        $case->source = $get_case['source'];
+                        $case->source_email = $get_case['email'];
+                        $case->status_owner = 'New';
+                        $case->urgensi_status = 'Normal';
+                        $case->telegram_id = $user_tele;
+                        $case->follow_up = '0';
+                        $case->save(false);
+
+                        return $this->render('get_pictures',[
+                          'chat_id' => $cek_used_system['chat_id'],
+                          'nama_depan' => $cek_used_system['first_name']
+                        ]);  
+                      }
+                    endif;
                     break;
                   default:
                     return $this->render('get_case',[
@@ -398,8 +579,11 @@ class SiteController extends Controller
                     ]);
                 endswitch;
               break;
-            case ($text == "3.85" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "3.81" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "3.80" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "3.70" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "3.10" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "3.00" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "PARTNER" && $cek_user_actived && $session_db['my_session'] == '4'):
+            case ($text == "3.85" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "3.81" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "3.80" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "3.70" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "3.10" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "3.00" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "PARTNER" && $cek_user_actived && $session_db['my_session'] == '4' || $text == "myIH X" && $cek_user_actived && $session_db['my_session'] == '4'):
               
+              if($text == "myIH X"):
+                $text = "myIndiHome X";
+              endif;
               $sql = $connection->createCommand()->insert('temp_app_version',[
                 'version' => $text,
                 'telegram_id' => $user_tele
@@ -428,6 +612,11 @@ class SiteController extends Controller
                   'nama_depan' => $cek_used_system['first_name']
               ]);
               break;
+            case (strpos($text, "@") == 0 && $cek_user_actived && $session_db['my_session'] == '2'):
+              $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
+              return $this->render('get_invalid_email',[
+                'chat_id' => $cek_used_system['chat_id'],
+              ]);
             case (strpos($text, "@") > 0 && $cek_user_actived && $session_db['my_session'] == '2'):
               
               $sql = $connection->createCommand()->insert('temp_email',[
@@ -443,7 +632,7 @@ class SiteController extends Controller
                 'nama_depan' => $cek_used_system['first_name']
               ]);
               break;
-            case ($text == "147" && $cek_user_actived && $session_db['my_session'] == '1' || $text == "C4" && $cek_user_actived && $session_db['my_session'] == '1' || $text == "Social Media" && $cek_user_actived && $session_db['my_session'] == '1' || $text == "Plasa Telkom" && $cek_user_actived && $session_db['my_session'] == '1' || $text == "Sales" && $cek_user_actived && $session_db['my_session'] == '1' || $text == "Lainnya" && $cek_user_actived && $session_db['my_session'] == '1'):
+            case ($text == "147" && $cek_user_actived && $session_db['my_session'] == '1' || $text == "C4" && $cek_user_actived && $session_db['my_session'] == '1' || $text == "Sosial Media" && $cek_user_actived && $session_db['my_session'] == '1' || $text == "Plasa Telkom" && $cek_user_actived && $session_db['my_session'] == '1' || $text == "Sales" && $cek_user_actived && $session_db['my_session'] == '1' || $text == "Lainnya" && $cek_user_actived && $session_db['my_session'] == '1'):
             
               $sql = $connection->createCommand()->insert('temp_source',[
                   'source' => $text,
@@ -457,9 +646,10 @@ class SiteController extends Controller
                   'chat_id' => $cek_used_system['chat_id'],
               ]);
               break;
-            case($text == "Create Ticket" && $cek_user_actived):
+            case($text == "Buat Tiket" && $cek_user_actived):
               
               $connection->createCommand("DELETE FROM session_bot WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->execute();
               
               $connection->createCommand()->insert('session_bot',[
                   'my_session' => '1',
@@ -486,7 +676,7 @@ class SiteController extends Controller
 
               $date = date('Y-m-d H:i:s');
               $currentDate = strtotime($date);
-              $futureDate = $currentDate+(60*10);
+              $futureDate = $currentDate+(60*15);
               $max_date = date("Y-m-d H:i:s", $futureDate);
 
               $connection->createCommand()->insert('temp_active_id', [
@@ -585,7 +775,7 @@ class SiteController extends Controller
             $get_file = Yii::$app->telegram->getFile([
               'file_id' => $data['message']['photo']['1']['file_id'],
             ]);
-            $url = "https://api.telegram.org/file/bot1248348390:AAGXMfWmHAzfKoEEihR1VGu_036LTSwRHnc/".$get_file->result->file_path;
+            $url = "https://api.telegram.org/file/bot1248348390:AAGHKbmdXFhJgjtRvV-7qqvmHfxzJPqRLPY/".$get_file->result->file_path;
             $filename = basename($url);
     
             $ext = pathinfo($filename, PATHINFO_EXTENSION);
@@ -620,17 +810,47 @@ class SiteController extends Controller
       endif;
     }
 
+    public function actionSaveWebcam()
+    {
+      
+      $this->layout = "login-layout";
+
+      if(isset($_FILES['webcam'])){
+        $user = User::findOne(Yii::$app->user->id);
+
+        $filename =  $user->username.'-'.date('YmdHis').'.jpg';
+
+        if(!empty($user->webcam) || $user->webcam != NULL):
+          $oldFile = Yii::$app->basePath."/web/images/webcam/".$user->webcam;
+          if(file_exists($oldFile)):unlink($oldFile);endif;
+        endif;
+
+        $filepath = Yii::getAlias('@webroot/images/webcam/');
+        move_uploaded_file($_FILES['webcam']['tmp_name'], $filepath.$filename);
+
+        $user->webcam = $filename;
+        $user->save(false);
+      }
+    }
+
+    public function actionGotoUser()
+    {
+      return $this->redirect(['user/index']);
+    }
+    
     public function actionLogin()
     {
         $this->layout = "login-layout";
 
         if (!Yii::$app->user->isGuest) {
-            return $this->goHome();
+          Yii::$app->user->logout();
+          return $this->goHome();
         }
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            return $this->redirect(['user/index']);
+          return $this->redirect(['user/index']);
+          // return json_encode("Yes");
         }
 
         $model->password = '';

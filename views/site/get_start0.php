@@ -14,7 +14,7 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("Hi ".$nama_depan."\xE2\x9C\x8C,\nSelamat datang di tiket myIndiHome bot.", $chat_id, [
+    Yii::$app->telegram->sendMessage("Hai ".$nama_depan."\xE2\x9C\x8C,\nSelamat datang di tiket myIndiHome bot.", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
 ?>

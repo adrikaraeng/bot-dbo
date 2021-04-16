@@ -399,17 +399,17 @@ class SiteController extends Controller
                             $max_date = date("Y-m-d H:i:s", $futureDate);
 
                             $connection->createCommand()->insert('temp_active_id', [
-                                'chat_id' => $chat_id,
-                                'username' => $username,
-                                'first_name' => $nama_depan,
-                                'active_date' => $date,
-                                'max_active_date' => $max_date
+                              'chat_id' => $chat_id,
+                              'username' => $username,
+                              'first_name' => $nama_depan,
+                              'active_date' => $date,
+                              'max_active_date' => $max_date
                             ])->execute();
 
                             return $this->render('get_start',[
-                                'chat_id' => $chat_id,
-                                'nama_depan' => $nama_depan,
-                                'start_date' => $date
+                              'chat_id' => $chat_id,
+                              'nama_depan' => $nama_depan,
+                              'start_date' => $date
                             ]);
                             break;
                         case ($text == "Home" || $text == "Start"):

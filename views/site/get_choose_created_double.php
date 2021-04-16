@@ -17,7 +17,7 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("Hi ".$nama_depan.",\nData case ini telah dibuat sebelumnya di\nNomor tiket : <b>$tiket</b>\nKeluhan : <b>$keluhan</b>\n\nTekan <b>Continue</b> untuk tetap melanjutkan buat tiket, atau <b>Cancel</b> untuk membatalkan buat tiket.", $chat_id, [
+    Yii::$app->telegram->sendMessage("Hai ".$nama_depan.",\nData case ini telah dibuat sebelumnya di\nNomor tiket : <b>$tiket</b>\nKeluhan : <b>$keluhan</b>\n\nTekan <b>Continue</b> untuk tetap melanjutkan buat tiket, atau <b>Cancel</b> untuk membatalkan buat tiket.", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
     die();

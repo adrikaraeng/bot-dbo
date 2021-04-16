@@ -19,11 +19,11 @@ $config = [
     'components' => [
         // 'telegram' => [
         //     'class' => 'aki\telegram\Telegram',
-        //     'botToken' => '1248348390:AAGXMfWmHAzfKoEEihR1VGu_036LTSwRHnc',
+        //     'botToken' => '1248348390:AAGHKbmdXFhJgjtRvV-7qqvmHfxzJPqRLPY',
         // ],
         'telegram' => [
             'class' => 'mirkhamidov\telegramBot\TelegramBot',
-            'botToken' => '1248348390:AAGXMfWmHAzfKoEEihR1VGu_036LTSwRHnc',
+            'botToken' => '1248348390:AAGHKbmdXFhJgjtRvV-7qqvmHfxzJPqRLPY',
         ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
@@ -42,10 +42,15 @@ $config = [
         ],
         'mailer' => [
             'class' => 'yii\swiftmailer\Mailer',
-            // send all mails to a file by default. You have to set
-            // 'useFileTransport' to false and configure a transport
-            // for the mailer to send real emails.
-            'useFileTransport' => true,
+            'useFileTransport' => false,
+            'transport' => [
+                'class' => 'Swift_SmtpTransport',
+                'host' => 'smtp.gmail.com',
+                'username' => 'tiketmyindihomebot@gmail.com',
+                'password' => 'dbomyindihome2021',
+                'port' => '587',
+                'encryption' => 'tls'
+            ],
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,

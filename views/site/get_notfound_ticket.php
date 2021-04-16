@@ -8,10 +8,10 @@ use yii\helpers\Url;
         "keyboard" =>[
             [
                 [
-                    'text' => "Create Ticket",
+                    'text' => "Buat Tiket",
                 ],
                 [
-                    'text' => "Check Ticket",
+                    'text' => "Cek Tiket",
                 ],
                 [
                     'text' => "Exit",
