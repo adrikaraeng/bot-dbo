@@ -125,19 +125,6 @@ $connection = \Yii::$app->db;
     background-color: #4CAF50;
     color: white;
   }
-  #upload {
-   border:4px dotted black;
-   width:100%;
-   height:auto;
-   min-height:250px;
-   max-height:350px;
-   text-align:center;
-   overflow:auto;
-   display:flex;
-   align-items: center;
-   justify-content: center;
-   vertical-align: middle;
-  }
 </style>
 
 <div id="case-telegram">
@@ -428,8 +415,26 @@ $connection = \Yii::$app->db;
                 </div>
                 <div class="col-lg-4">
                   <label for="feedback_gambar">Feedback Gambar</label>
-                  <div id="upload" contenteditable>
-                  </div>
+                  <?=
+                      FileInput::widget([
+                          'model' => $model,
+                          'attribute' => 'feedback_gambar',
+                          'options' => ['multiple'=>false, 'accept' => 'image/*'],
+                          'pluginOptions' => [
+                              'allowedFileExtensions' => ['jpg','jpeg','png'],
+                              // 'initialCaption'=>"Feedback Gambar",
+                              'previewFileType' => 'image',
+                              'showPreview' => true,
+                              'showUpload' => false,
+                              'maxFileSize'=> 3052,
+                              'browseOnZoneClick' => true,
+                              // 'maxFileCount' => 5,
+                              'browseLabel' => '',
+                              'browseClass' => "btn btn-primary",
+                              // 'browseIcon' => "<i class='fa fa-folder-open' style='font-size:1.9em;color:#fff;'></i>"
+                          ]
+                      ]);
+                  ?>
                 </div>
               </div>
             <?php ActiveForm::end(); ?>
@@ -535,7 +540,7 @@ $connection = \Yii::$app->db;
       </script>
     <?php endif; ?>
   </div>
-  <?php if($nonew):?>
+
   <div class="col-md-12">
 
     <div id="on-progress-case">
@@ -598,7 +603,6 @@ $connection = \Yii::$app->db;
     </div>
 
   </div>
-  <?php endif;?>
 
   <?php else:?>
   
@@ -674,134 +678,13 @@ $connection = \Yii::$app->db;
         <div style="font-size:0.8em;height:40px;padding-top:12px;">New : <b><?=$consum_new?></b></div>
       </span>
     </div>
-    <div class="col-md-2">
-    </div>
-    <div class="col-md-8">
-      <div class="row-cases-form">
-        <div style="color:#c40000;font-weight:bold;">No results found !</div>
-      </div>
-    </div>
-      <!-- New List -->
-      <div class="col-md-2">
-        <div id="new-case" style="margin-top:-40px;">
-
-          <div class="head-case">List New Case</div>
-            <div class="body-case">
-              <?php if($case_new != NULL):?>
-                  <?php foreach($case_new as $c_new => $cn):?>
-                    <?php
-                      $date_awal = new DateTime($cn->tanggal_masuk);
-                      if($cn->status_owner=="Closed"):
-                        $date_akhir = new DateTime($cn->tanggal_closed);
-                      else:
-                        $date_akhir =  new DateTime(date('Y-m-d H:i:s'));
-                      endif;
-
-                      $age_new=$date_awal->diff($date_akhir);  
-                    ?>
-                      <?php if($cn->follow_up == NULL || $cn->follow_up == ''):?>
-                      <?php $cn->follow_up = 0;?>
-                      <?php endif;?>
-                      <?php if($cn->status_owner == 'New'):?>
-                          <div id="list-newcase" title="New case" style="cursor:pointer;">
-                            <div>
-                              <div id="to-case" title="Clik to take ownership"><span class="label label-primary take-owner" onclick="getCase('<?=$cn->id?>')">Take Owner</span></div>
-                                
-                              <div style="text-align:right;" title="Usia tiket (Jam:Menit)"><?=$age_new->format("%H:%I")?></div>
-                            </div>
-                            <div style="padding-bottom:5px;clear:left;">
-                              <div><b><?=$cn->tiket?></b><span style="float:right;font-size:0.9em;font-weight:bold;">FU: <?=$cn->follow_up?></span></div>
-                              <div style="float:left;text-align:left;clear:left;"><?=$cn->nama?></div>
-                              <div style="font-size:0.8em;text-align:right;"><?=date('d/m/y H:i:s', strtotime($cn->tanggal_masuk))?></div>
-                            </div>
-                          </div>
-                      <?php elseif($cn->status_owner == 'TO' && $cn->login == $user->username):?>
-                          <?php 
-                            $user_ = $connection->createCommand("SELECT * FROM user WHERE username='$cn->login'")->queryOne();  
-                          ?>
-                          <div id="list-mine" title="TO by <?=$user_['nama_lengkap']?>" onclick="getSeecase('<?=$cn->id?>')" style="cursor:pointer;">
-                              <div>
-                                <div style="float:left;text-align:left;"><b><?=$cn->tiket?></b></div>
-                                <div style="text-align:right;" title="Usia tiket (Jam:Menit)"><?=$age_new->format("%H:%I")?></div>
-                              </div>
-                              <div><?=$cn->nama?><span style="float:right;font-size:0.9em;font-weight:bold;">FU: <?=$cn->follow_up?></span></div>
-                              <div style="font-size:0.7em;">
-                                <span style="float:left;"><b><?=$cn->login?></b></span>
-                                <span style="float:right;clear:right;"><?=date('d/m/y H:i:s', strtotime($cn->tanggal_masuk))?></span>
-                                <div style="clear:left;"></div>
-                              </div>
-                          </div>
-                      <?php else:?>
-                          <?php 
-                            $user_ = $connection->createCommand("SELECT * FROM user WHERE username='$cn->login'")->queryOne();  
-                          ?>
-                          <div id="list-to" title="TO by <?=$user_['nama_lengkap']?>" style="cursor:pointer;">
-                              <div>
-                                <div style="float:left;text-align:left;"><b><?=$cn->tiket?></b></div>
-                                <div style="text-align:right;" title="Usia tiket (Jam:Menit)"><?=$age_new->format("%H:%I")?></div>
-                              </div>
-                              <div><?=$cn->nama?><span style="float:right;font-size:0.9em;font-weight:bold;">FU: <?=$cn->follow_up?></span></div>
-                              <div style="font-size:0.7em;">
-                                <span style="float:left;"><b><?=$cn->login?></b></span>
-                                <span style="float:right;clear:right;"><?=date('d/m/y H:i:s', strtotime($cn->tanggal_masuk))?></span>
-                                <div style="clear:left;"></div>
-                              </div>
-                          </div>
-                      <?php endif;?>
-                  <?php endforeach;?>
-              <?php else:?>
-                  <i>Data not found</i>
-              <?php endif;?>
-          </div>
-        </div>
-      </div>
-      <!-- End new list -->
+    <div style="color:#c40000;font-weight:bold;">No results found !</div>
   <?php endif;?>
   
 </div>
 
-<?php
-  $this->registerJS("
-    $('#upload').keydown(function (event) {
-      if (event.ctrlKey || event.keyCode == 8) {
-        return true;
-      }
-      if (33 <= event.keyCode && event.keyCode <= 40) {
-        return true;
-      }
-      return false;
-    });
-
-    $('form#form-case').on('beforeSubmit',function (e) {
-      e.preventDefault();
-      var form = $(this);
-      var formData = form.serialize();
-      var img_data = $('#upload img').attr('src');
-
-      if(img_data == null){
-        console.log('kosong');
-        img_data = 'kosong';
-      }else{
-        console.log('ada');
-      }
-      
-      $.ajax({
-        url: $(this).attr('action'),
-        type: 'post',
-        processData : false,
-        cache: false,
-        data: formData+'&img='+img_data,
-        success: function(res){
-          console.log('success');
-        }
-      });
-      return false;
-    });
-  ");
-?>
 
 <script>
-
   function refreshServ()
   {
     $.ajax({
@@ -870,15 +753,12 @@ $connection = \Yii::$app->db;
       url : 'get-case',
       type : 'POST',
       data : "id="+id,
-      processData : false,
-      cache: false,
       success : function(){
+        location.reload(); 
         $.ajax({
           url : 'get-reload-case',
           type : 'POST',
           data : "id="+id,
-          processData : false,
-          cache: false,
           success : function (data){
             $('#case-telegram').html(data);
           }

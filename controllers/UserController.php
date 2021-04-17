@@ -41,6 +41,22 @@ class UserController extends Controller
         ];
     }
 
+    public function actionGetImage()
+    {
+        if(!empty(isset($_POST['img']))){
+
+            $data = $_POST['img'];
+            $data = str_replace('data:image/png;base64,', '', $data);
+            $data = str_replace(' ', '+', $data);
+            $data = base64_decode($data);
+            // $img = base64_decode($data['1']);
+
+            file_put_contents(Yii::getAlias('@webroot/images/test-img.png'), $data);
+            print_r('sukses');
+        }else{
+            print_r('gagal');
+        }
+    }
     public function actionDashboard()
     {
         $this->layout="dashboard";
@@ -270,6 +286,7 @@ class UserController extends Controller
         $case_onprogress = Cases::find()->where("status_owner='On Progress' AND login='$user->username'")->orderBy("DATE(tanggal_masuk) ASC")->all();
 
         $side = "A";
+        $nonew = Cases::find()->where("status_owner='New' AND login='$user->username'")->orderBy("login ASC")->one();
         $report = new DatesearchForm;
         return $this->render('index', [
             'user' => $user,
@@ -277,7 +294,8 @@ class UserController extends Controller
             'case_onprogress' => $case_onprogress,
             'model' => $model,
             'side' => $side,
-            'report' => $report
+            'report' => $report,
+            'nonew' => $nonew
         ]);
     }
     public function actionGetRefresh()
@@ -306,17 +324,34 @@ class UserController extends Controller
             $model->insert_date = date('Y-m-d H:i:s');
 
             $imageName = date('YmdHis').time();
-            if( strlen(trim(UploadedFile::getInstance($model,'feedback_gambar'))) > 0 ):
-                $gambar = UploadedFile::getInstance($model,'feedback_gambar');
-                if($gambar != NULL):
-                    $gambar->saveAs('images/'.$imageName.'.'.$gambar->extension);
-                    $model->feedback_gambar = $imageName.'.'.$gambar->extension;
-                    $model_a->feedback_gambar = $model->feedback_gambar;
-                endif;
-            else:
-              $model->feedback_gambar = "";
-              $model_a->feedback_gambar = $model->feedback_gambar;
-            endif;
+            // if( strlen(trim(UploadedFile::getInstance($model,'feedback_gambar'))) > 0 ):
+            //     $gambar = UploadedFile::getInstance($model,'feedback_gambar');
+            //     if($gambar != NULL):
+            //         $gambar->saveAs('images/'.$imageName.'.'.$gambar->extension);
+            //         $model->feedback_gambar = $imageName.'.'.$gambar->extension;
+            //         $model_a->feedback_gambar = $model->feedback_gambar;
+            //     endif;
+            // else:
+            //   $model->feedback_gambar = "";
+            //   $model_a->feedback_gambar = $model->feedback_gambar;
+            // endif;
+            
+            if($_POST['img'] != 'kosong'){
+                $data = $_POST['img'];
+                $data = str_replace('data:image/png;base64,', '', $data);
+                $data = str_replace(' ', '+', $data);
+                $data = base64_decode($data);
+                // $img = base64_decode($data['1']);
+    
+                file_put_contents(Yii::getAlias('@webroot/images/'.$imageName.'.png'), $data);
+                $model->feedback_gambar = $imageName.'.png';
+                $model_a->feedback_gambar = $model->feedback_gambar;
+                // print_r('image saved');
+            }else{
+                $model->feedback_gambar = NULL;
+                $model_a->feedback_gambar = $model->feedback_gambar;
+                // print_r('no image');
+            }
 
             $model_a->feedback = $_POST['ListProgressCases']['feedback'];
             if($model->status == "Closed"):
@@ -442,7 +477,7 @@ class UserController extends Controller
 
             if(empty($category) || empty($subCategory) || empty($backEnd) || empty($feedback) || empty($statusOwner)){
                 Yii::$app->session->setFlash('error', "Periksa kembali form inputan!"); 
-                return $this->redirect('index');
+                return $this->redirect(['index']);
             }
 
             if($model->status_owner == "Closed" || $_POST['Cases']['status_owner'] == "Closed"):
@@ -458,13 +493,28 @@ class UserController extends Controller
             endif;
             
             $imageName = date('YmdHis').time();
-            if( strlen(trim(UploadedFile::getInstance($model,'feedback_gambar'))) > 0 ):
-                $gambar = UploadedFile::getInstance($model,'feedback_gambar');
-                if($gambar != NULL):
-                    $gambar->saveAs('images/'.$imageName.'.'.$gambar->extension);
-                    $model->feedback_gambar = $imageName.'.'.$gambar->extension;
-                endif;
-            endif;
+            // if( strlen(trim(UploadedFile::getInstance($model,'feedback_gambar'))) > 0 ):
+            //     $gambar = UploadedFile::getInstance($model,'feedback_gambar');
+            //     if($gambar != NULL):
+            //         $gambar->saveAs('images/'.$imageName.'.'.$gambar->extension);
+            //         $model->feedback_gambar = $imageName.'.'.$gambar->extension;
+            //     endif;
+            // endif;
+
+            if($_POST['img'] != 'kosong'){
+                $data = $_POST['img'];
+                $data = str_replace('data:image/png;base64,', '', $data);
+                $data = str_replace(' ', '+', $data);
+                $data = base64_decode($data);
+                // $img = base64_decode($data['1']);
+    
+                file_put_contents(Yii::getAlias('@webroot/images/'.$imageName.'.png'), $data);
+                $model->feedback_gambar = $imageName.'.png';
+                print_r('image saved');
+            }else{
+                $model->feedback_gambar = NULL;
+                print_r('no image');
+            }
 
             $model->urgensi_status = "Normal";
             
@@ -601,6 +651,8 @@ class UserController extends Controller
       $last_update = ListProgressCases::find()->where("cases='$model->id'")->orderBy("id DESC")->all();
         
       $side = "A";
+
+      $nonew = Cases::find()->where("status_owner<>'New' AND login='$user->username'")->orderBy("login ASC")->one();
       $report = new DatesearchForm;
       return $this->renderAjax('update-case',[
           'user' => $user,
@@ -609,7 +661,8 @@ class UserController extends Controller
           'model' => $model,
           'side' => $side,
           'last_update' => $last_update,
-          'report' => $report
+          'report' => $report,
+          'nonew' => $nonew
       ]);
     }
 
@@ -707,13 +760,18 @@ class UserController extends Controller
             $model = Cases::findOne($id); 
             $side = "A";
 
+            $nonew = Cases::find()->where("status_owner='New' AND login='$user->username' || status_owner='TO' AND login='$user->username'")->orderBy("login ASC")->one();
+            $report = new DatesearchForm;
+
             return $this->renderAjax('update-case',[
                 'user' => $user,
                 'case_new' => $case_new,
                 'case_onprogress' => $case_onprogress,
                 'model' => $model,
                 'side' => $side,
-                'last_update' => $last_update
+                'last_update' => $last_update,
+                'report' => $report,
+                'nonew' => $nonew
             ]);
         endif;
     }
@@ -741,6 +799,9 @@ class UserController extends Controller
 
         $model = Cases::findOne($id);
         $last_update = ListProgressCases::find()->where("cases='$model->id'")->orderBy("id DESC")->all();
+        if($model->login != "" || $model->login != NULL):
+            return $this->redirect(['index']);
+        endif;
         $model->login=$user->username;
         if($model->status_owner == "New"):
             $model->status_owner = "TO";
@@ -757,13 +818,18 @@ class UserController extends Controller
                 'insert_date' => date('Y-m-d H:i:s')
             ])->execute();
 
+            $nonew = Cases::find()->where("status_owner='New' AND login='$user->username' || status_owner='TO' AND login='$user->username'")->orderBy("login ASC")->one();
+            $report = new DatesearchForm;
+
             return $this->renderAjax('update-case',[
                 'user' => $user,
                 'case_new' => $case_new,
                 'case_onprogress' => $case_onprogress,
                 'model' => $model,
                 'side' => $side,
-                'last_update' => $last_update
+                'last_update' => $last_update,
+                'report' => $report,
+                'nonew' => $nonew
             ]);
         endif;
     }
@@ -830,7 +896,7 @@ class UserController extends Controller
         
         $user = User::findOne(Yii::$app->user->id);
         
-        $model = Cases::find()->where("status_owner='TO' AND login='$user->username'")->orderBy("login ASC")->one();
+        $model = Cases::find()->where("status_owner='TO' AND login='$user->username' || status_owner='On Progress' AND login='$user->username'")->orderBy("login ASC")->one();
         $case_new = Cases::find()->where("status_owner='New'  OR status_owner='TO' ")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
         // if($user->divisi=="MONITORING"):
         //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NULL AND no_tiket='' OR status_owner='TO' AND no_tiket IS NULL AND no_tiket=''")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
@@ -841,6 +907,7 @@ class UserController extends Controller
 
         $side = "A";
 
+        $nonew = Cases::find()->where("status_owner='New' AND login='$user->username' || status_owner='TO' AND login='$user->username'")->orderBy("login ASC")->one();
         $report = new DatesearchForm;
         return $this->render('index', [
             'user' => $user,
@@ -848,7 +915,8 @@ class UserController extends Controller
             'case_onprogress' => $case_onprogress,
             'model' => $model,
             'side' => $side,
-            'report' => $report
+            'report' => $report,
+            'nonew' => $nonew
         ]);
     }
 
@@ -913,10 +981,11 @@ class UserController extends Controller
         //     $model = Cases::find()->where("status_owner='TO' AND login='$user->username' AND no_tiket IS NOT NULL AND no_tiket<>''")->orderBy("login ASC")->one();
         //     $case_new = Cases::find()->where("status_owner='New' AND no_tiket IS NOT NULL AND no_tiket<>'' OR status_owner='TO' AND no_tiket<>'' AND no_tiket IS NOT NULL")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
         // endif;
-        $model = Cases::find()->where("status_owner='TO' AND login='$user->username'")->orderBy("login ASC")->one();
+        $model = Cases::find()->where("status_owner='TO' AND login='$user->username' || status_owner='On Progress' AND login='$user->username'")->orderBy("login ASC")->one();
         $case_new = Cases::find()->where("status_owner='New' OR status_owner='TO' OR status_owner='New' OR status_owner='TO'")->orderBy("status_owner ASC, DATE(tanggal_masuk) ASC")->all();
 
         $case_onprogress = Cases::find()->where("status_owner='On Progress' AND login='$user->username'")->orderBy("DATE(tanggal_masuk) ASC")->all();
+        $nonew = Cases::find()->where("status_owner='New' AND login='$user->username' || status_owner='TO' AND login='$user->username'")->orderBy("login ASC")->one();
 
         $side = "A";
         $report = new DatesearchForm;
@@ -926,7 +995,8 @@ class UserController extends Controller
             'case_onprogress' => $case_onprogress,
             'model' => $model,
             'side' => $side,
-            'report' => $report
+            'report' => $report,
+            'nonew' => $nonew
         ]);
     }
 

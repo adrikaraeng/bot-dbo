@@ -318,25 +318,8 @@ $connection = \Yii::$app->db;
               </div>
               <div class="col-lg-4">
                 <label for="feedback_gambar">Feedback Gambar</label>
-                <?=
-                    FileInput::widget([
-                        'model' => $model,
-                        'attribute' => 'feedback_gambar',
-                        'options' => ['multiple'=>false, 'accept' => 'image/*'],
-                        'pluginOptions' => [
-                            'allowedFileExtensions' => ['jpg','jpeg','png'],
-                            'previewFileType' => 'image',
-                            'showPreview' => true,
-                            'showUpload' => false,
-                            'maxFileSize'=> 3052,
-                            'browseOnZoneClick' => true,
-                            // 'maxFileCount' => 5,
-                            'browseLabel' => '',
-                            'browseClass' => "btn btn-primary",
-                            // 'browseIcon' => "<i class='fa fa-folder-open' style='font-size:1.9em;color:#fff;'></i>"
-                        ]
-                    ]);
-                ?>
+                <div id="upload" contenteditable>
+                </div>
               </div>
             </div>
           <?php ActiveForm::end(); ?>
@@ -515,6 +498,46 @@ $connection = \Yii::$app->db;
 <?php endif;?>
 
 </div>
+
+<?php
+  $this->registerJS("
+    $('#upload').keydown(function (event) {
+      if (event.ctrlKey || event.keyCode == 8) {
+        return true;
+      }
+      if (33 <= event.keyCode && event.keyCode <= 40) {
+        return true;
+      }
+      return false;
+    });
+
+    $('form#form-case').on('beforeSubmit',function (e) {
+      e.preventDefault();
+      var form = $(this);
+      var formData = form.serialize();
+      var img_data = $('#upload img').attr('src');
+
+      if(img_data == null){
+        console.log('kosong');
+        img_data = 'kosong';
+      }else{
+        console.log('ada');
+      }
+      
+      $.ajax({
+        url: $(this).attr('action'),
+        type: 'post',
+        processData : false,
+        cache: false,
+        data: formData+'&img='+img_data,
+        success: function(res){
+          console.log('success');
+        }
+      });
+      return false;
+    });
+  ");
+?>
 <script>
   function refreshServ()
   {
@@ -542,25 +565,30 @@ $connection = \Yii::$app->db;
       }
     });
   }
-  function getCase(id)
-  {
-    $.ajax({
-      url : 'get-case',
-      type : 'POST',
-      data : "id="+id,
-      success : function(data){
-        $('#case-telegram').html(data);
-        location.reload();
-        // $.ajax({
-        //   url : 'get-case',
-        //   type : 'POST',
-        //   data : "id="+id,
-        //   success : function (newData){
-        //   }
-        // });
-      }
-    });
-  }
+
+function getCase(id)
+{
+  // alert(id);
+  $.ajax({
+    url : 'get-case',
+    type : 'POST',
+    data : "id="+id,
+    processData : false,
+    cache: false,
+    success : function(){
+      $.ajax({
+        url : 'get-reload-case',
+        type : 'POST',
+        data : "id="+id,
+        processData : false,
+        cache: false,
+        success : function (data){
+          $('#case-telegram').html(data);
+        }
+      });
+    }
+  });
+}
 
   $(function () {
     $('[data-toggle="popover"]').popover({
