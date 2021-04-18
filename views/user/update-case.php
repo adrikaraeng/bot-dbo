@@ -295,6 +295,7 @@ $connection = \Yii::$app->db;
                         'data' => $app,
                         'options'=>[
                           'id' => "app-search",
+                          'style' => "font-size:0.8em;",
                           'placeholder' => Yii::t('app','Select App Version')
                         ],
                         'pluginOptions' => [
@@ -318,7 +319,7 @@ $connection = \Yii::$app->db;
               </div>
               <div class="col-lg-4">
                 <label for="feedback_gambar">Feedback Gambar</label>
-                <div id="upload" contenteditable>
+                <div id="upload" placeholder="Paste an image" contenteditable>
                 </div>
               </div>
             </div>

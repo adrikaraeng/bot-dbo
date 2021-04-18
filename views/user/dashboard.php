@@ -311,6 +311,9 @@ window.onload = function() {
       labelMaxWidth: 50,
       labelFontSize: 10,
       labelFontColor: "#000",
+      labelFormatter: function(){
+        return " ";
+      }
     },
     toolTip:{
       enabled: true,       //disable here
@@ -373,6 +376,9 @@ var chart_m = new CanvasJS.Chart("count_kategori_month", {
       labelMaxWidth: 50,
       labelFontSize: 10,
       labelFontColor: "#000",
+      labelFormatter: function(){
+        return " ";
+      }
     },
     toolTip:{
       enabled: true,       //disable here
@@ -435,6 +441,9 @@ var chart_d = new CanvasJS.Chart("count_kategori_today", {
       labelMaxWidth: 50,
       labelFontSize: 10,
       labelFontColor: "#000",
+      labelFormatter: function(){
+        return " ";
+      }
     },
     toolTip:{
       enabled: true,       //disable here
@@ -514,6 +523,9 @@ var chart_d = new CanvasJS.Chart("count_kategori_today", {
       titleFontSize: 12,
       titleFontWeight: "bold",
       titleFontColor: "#000",
+    },
+    axisX:{
+      labelFontSize: 15,
     },
     toolTip:{   
 			content: "{label}: {y}"      

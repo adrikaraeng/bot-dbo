@@ -23,7 +23,7 @@ $config = [
         // ],
         'telegram' => [
             'class' => 'mirkhamidov\telegramBot\TelegramBot',
-            'botToken' => '1248348390:AAGHKbmdXFhJgjtRvV-7qqvmHfxzJPqRLPY',
+            'botToken' => '1248348390:AAG3jfL_3NBjiwD0fMZ6hkBmN9SxSx5Vf5o',
         ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation

@@ -126,22 +126,30 @@ $connection = \Yii::$app->db;
     color: white;
   }
   #upload {
-   border:4px dotted black;
-   width:100%;
-   height:auto;
-   min-height:250px;
-   max-height:350px;
-   text-align:center;
-   overflow:auto;
-   display:flex;
-   align-items: center;
-   justify-content: center;
-   vertical-align: middle;
+    border:4px dotted black;
+    width:100%;
+    height:auto;
+    min-height:250px;
+    max-height:350px;
+    text-align:center;
+    overflow:auto;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+  }
+
+  #upload:before {
+    content: attr(placeholder);
+    color: #aaaaaa;
+    font-size: 0.8em;
+    display: block;
+    position:absolute;    
+    font-family: "Campton", sans-serif;
   }
 </style>
 
 <div id="case-telegram">
-
   <?php
     $month = date('m');
     $consum_daily_ods = $connection->createCommand("SELECT COUNT(*) FROM cases WHERE login='$user->username' AND status_owner='Closed' AND MONTH(tanggal_masuk)='$month' AND DATE(tanggal_closed)=DATE(tanggal_masuk)")->queryScalar();
@@ -312,6 +320,7 @@ $connection = \Yii::$app->db;
                 'validationUrl' => Url::toRoute(['/user/ajax-ceksimpan', 'id'=>$model->id]),
             ]); ?>
             <p style="font-weight:bold;">Case Form</p>
+ 
               <?php if($model->login == $user->username):?>
                 <div id="to-case" style="right:10px;cursor:pointer;float:left;" title="Clik to reopen the ticket" onclick="getReopen('<?=$model->id?>')"><span id="take-off" class="label label-danger">Take Off</span></div>
               <?php elseif($model->login == NULL && $model->status_owner == "New"):?>
@@ -404,7 +413,7 @@ $connection = \Yii::$app->db;
                     <?= $form->field($model, 'app_version')->widget(Select2::classname(), [
                           'data' => $app,
                           'options'=>[
-                            'id' => "app-search",
+                            'id' => "app-search-version",
                             'placeholder' => Yii::t('app','Select App Version')
                           ],
                           'pluginOptions' => [
@@ -428,7 +437,7 @@ $connection = \Yii::$app->db;
                 </div>
                 <div class="col-lg-4">
                   <label for="feedback_gambar">Feedback Gambar</label>
-                  <div id="upload" contenteditable>
+                  <div id="upload" placeholder="Paste an image" contenteditable>
                   </div>
                 </div>
               </div>

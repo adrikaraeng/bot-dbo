@@ -182,7 +182,7 @@ $this->params['breadcrumbs'][] = $this->title;
               </div>
               <div class="col-lg-4">
                 <label for="feedback_gambar">Feedback Gambar</label>
-                <div id="upload" contenteditable>
+                <div id="upload" placeholder="Paste an image" contenteditable>
                   </div>
               </div>
               

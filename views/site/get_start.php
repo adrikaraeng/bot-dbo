@@ -16,6 +16,11 @@ use yii\helpers\Url;
                 [
                     'text' => "Exit",
                 ]
+            ],
+            [
+                [
+                    'text' => "Search"
+                ]
             ]
         ]
     ];

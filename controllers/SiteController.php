@@ -70,7 +70,7 @@ class SiteController extends Controller
     public function actionGet_source()
     {
         $connection = \Yii::$app->db;
-        $token = 'bot1248348390:AAGXMfWmHAzfKoEEihR1VGu_036LTSwRHnc';
+        $token = 'bot1248348390:AAG3jfL_3NBjiwD0fMZ6hkBmN9SxSx5Vf5o';
         $data = file_get_contents("php://input");
         $data = json_decode($data, true);
         
@@ -127,6 +127,7 @@ class SiteController extends Controller
           $session_db = $connection->createCommand("SELECT * FROM session_bot WHERE my_session IS NOT NULL AND telegram_id='$user_tele'")->queryOne();
           $cek_user_actived = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$user_tele' AND `status`='on'")->queryOne();
           $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
+          $cek_search_val = $connection->createCommand("SELECT * FROM temp_search_case WHERE telegram_id='$user_tele'")->queryOne();
 
           $cek_ticket = $connection->createCommand("SELECT * FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->queryOne();
 
@@ -378,6 +379,58 @@ class SiteController extends Controller
                 'tiket' => $text
               ]);
               break;
+            case ($text != "Search" && $cek_search_val['search_permit'] == '1' && $cek_user_actived):
+              $text = preg_replace('/\s+/', '', $text);
+              $date1 = date('Y-m-d',strtotime("1 days"));
+              $date2 = date('Y-m-d',strtotime("2 days"));
+              $date3 = date('Y-m-d',strtotime("3 days"));
+              $today = date('Y-m-d');
+              $sql = $connection->createCommand("SELECT * FROM cases WHERE
+              email LIKE '%$text%' AND tanggal_masuk='$date1' OR
+              hp='$text' AND tanggal_masuk='$date1' OR
+              `inet`='$text' AND tanggal_masuk='$date1' OR
+              pstn='$text' AND tanggal_masuk='$date1' OR
+              email LIKE '%$text%' AND tanggal_masuk='$date2' OR
+              hp='$text' AND tanggal_masuk='$date2' OR
+              `inet`='$text' AND tanggal_masuk='$date2' OR
+              pstn='$text' AND tanggal_masuk='$date2' OR
+              email LIKE '%$text%' AND tanggal_masuk='$date3' OR
+              hp='$text' AND tanggal_masuk='$date3' OR
+              `inet`='$text' AND tanggal_masuk='$date3' OR
+              pstn='$text' AND tanggal_masuk='$date3' OR
+              email LIKE '%$text%' AND tanggal_masuk='$today' OR
+              hp='$text' AND tanggal_masuk='$today' OR
+              `inet`='$text' AND tanggal_masuk='$today' OR
+              pstn='$text' AND tanggal_masuk='$today' OR
+              email LIKE '%$text%' AND status_owner<>'Closed' OR
+              hp='$text' AND status_owner<>'Closed' OR
+              `inet`='$text' AND status_owner<>'Closed' OR
+              pstn='$text' AND status_owner<>'Closed'
+              ORDER BY tanggal_masuk ASC
+              ");
+            break;
+            case ($text == "Search" && $cek_user_actived):
+              
+              $sql = $connection->createCommand()->insert('temp_search_case', [
+                  'search_permit' => '1',
+                  'telegram_id' => $user_tele
+              ])->execute();
+
+              $connection->createCommand("DELETE FROM temp_source WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_kategori WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_email WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM session_bot WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_cases WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM session_reg WHERE telegram_id='$user_tele'")->execute();
+
+              $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
+
+              return $this->render('get_insert_search',[
+                'chat_id' => $cek_used_system['chat_id'],
+                'nama_depan' => $cek_used_system['first_name']
+              ]);
+            break;
             case ($text == 'Cek Tiket' && $cek_user_actived):
               
               $sql = $connection->createCommand()->insert('temp_cek_ticket', [
@@ -392,6 +445,7 @@ class SiteController extends Controller
               $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM temp_cases WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM session_reg WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_search_case WHERE telegram_id='$user_tele'")->execute();
 
               $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
 
@@ -673,6 +727,7 @@ class SiteController extends Controller
               $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM temp_cases WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_search_case WHERE telegram_id='$user_tele'")->execute();
 
               $date = date('Y-m-d H:i:s');
               $currentDate = strtotime($date);
@@ -707,6 +762,8 @@ class SiteController extends Controller
               $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM temp_cases WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_search_case WHERE telegram_id='$user_tele'")->execute();
+
               return $this->render('get_cancel_form',[
                 'chat_id' => $chat_id,
                 'nama_depan' => $nama_depan
@@ -721,6 +778,8 @@ class SiteController extends Controller
               $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM temp_cases WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_search_case WHERE telegram_id='$user_tele'")->execute();
+
               return $this->render('get_not_register',[
                 'chat_id' => $chat_id,
                 'nama_depan' => $nama_depan
@@ -735,6 +794,7 @@ class SiteController extends Controller
                 $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
                 $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
                 $connection->createCommand("DELETE FROM temp_cases WHERE telegram_id='$user_tele'")->execute();
+                $connection->createCommand("DELETE FROM temp_search_case WHERE telegram_id='$user_tele'")->execute();
 
                 return $this->render('get_start0',[
                     'chat_id' => $chat_id,
@@ -775,7 +835,7 @@ class SiteController extends Controller
             $get_file = Yii::$app->telegram->getFile([
               'file_id' => $data['message']['photo']['1']['file_id'],
             ]);
-            $url = "https://api.telegram.org/file/bot1248348390:AAGHKbmdXFhJgjtRvV-7qqvmHfxzJPqRLPY/".$get_file->result->file_path;
+            $url = "https://api.telegram.org/file/bot1248348390:AAG3jfL_3NBjiwD0fMZ6hkBmN9SxSx5Vf5o/".$get_file->result->file_path;
             $filename = basename($url);
     
             $ext = pathinfo($filename, PATHINFO_EXTENSION);
