@@ -12,6 +12,7 @@ $connection->createCommand("DELETE FROM temp_cek_ticket WHERE telegram_id='$user
 $connection->createCommand("DELETE FROM session_bot WHERE telegram_id='$user_tele'")->execute();
 $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
 $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
+$connection->createCommand("DELETE FROM temp_search_case WHERE telegram_id='$user_tele'")->execute();
     $keyboard = [ 
         'resize_keyboard' => true,
         "keyboard" =>[

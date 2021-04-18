@@ -14,12 +14,12 @@ use yii\helpers\Url;
                     'text' => "Cek Tiket",
                 ],
                 [
-                    'text' => "Exit",
+                    'text' => "Search",
                 ]
             ],
             [
                 [
-                    'text' => "Search"
+                    'text' => "Exit"
                 ]
             ]
         ]

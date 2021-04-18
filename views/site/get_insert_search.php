@@ -15,7 +15,7 @@ $keyboard = [
     ]
 ];
 
-    Yii::$app->telegram->sendMessage("\xE2\x96\xB6 Pencarian menggunakan <b>Email Customer/CP Customer/Nomor Internet/Nomor PSTN</b>.\nSilahkan input salah satu option:", $chat_id, [
+    Yii::$app->telegram->sendMessage("\xF0\x9F\x94\x94 Pencarian case menggunakan\n<b>Email customer/Nomor HP/Nomor Internet/Nomor PSTN</b>.\nSilahkan input salah satu option:", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
     // callback(0);

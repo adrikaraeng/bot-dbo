@@ -289,6 +289,7 @@ class SiteController extends Controller
             $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
             $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
             $connection->createCommand("DELETE FROM temp_cases WHERE telegram_id='$user_tele'")->execute();
+            $connection->createCommand("DELETE FROM temp_search_case WHERE telegram_id='$user_tele'")->execute();
 
             return $this->render('get_end_maxduration',[
                 'chat_id' => $chat_id,
@@ -379,35 +380,57 @@ class SiteController extends Controller
                 'tiket' => $text
               ]);
               break;
-            case ($text != "Search" && $cek_search_val['search_permit'] == '1' && $cek_user_actived):
-              $text = preg_replace('/\s+/', '', $text);
-              $date1 = date('Y-m-d',strtotime("1 days"));
-              $date2 = date('Y-m-d',strtotime("2 days"));
-              $date3 = date('Y-m-d',strtotime("3 days"));
+            case ($text != "Search" && $cek_search_val['search_permit'] == '1' && $cek_user_actived && $text != "Exit"):
+              $text = preg_replace('/\s/', '', $text);
+              $date1 = date('Y-m-d',strtotime("-1 days"));
+              $date2 = date('Y-m-d',strtotime("-2 days"));
+              $date3 = date('Y-m-d',strtotime("-3 days"));
               $today = date('Y-m-d');
               $sql = $connection->createCommand("SELECT * FROM cases WHERE
-              email LIKE '%$text%' AND tanggal_masuk='$date1' OR
-              hp='$text' AND tanggal_masuk='$date1' OR
-              `inet`='$text' AND tanggal_masuk='$date1' OR
-              pstn='$text' AND tanggal_masuk='$date1' OR
-              email LIKE '%$text%' AND tanggal_masuk='$date2' OR
-              hp='$text' AND tanggal_masuk='$date2' OR
-              `inet`='$text' AND tanggal_masuk='$date2' OR
-              pstn='$text' AND tanggal_masuk='$date2' OR
-              email LIKE '%$text%' AND tanggal_masuk='$date3' OR
-              hp='$text' AND tanggal_masuk='$date3' OR
-              `inet`='$text' AND tanggal_masuk='$date3' OR
-              pstn='$text' AND tanggal_masuk='$date3' OR
-              email LIKE '%$text%' AND tanggal_masuk='$today' OR
-              hp='$text' AND tanggal_masuk='$today' OR
-              `inet`='$text' AND tanggal_masuk='$today' OR
-              pstn='$text' AND tanggal_masuk='$today' OR
+              email LIKE '%$text%' AND tanggal_masuk LIKE '%$date1%' OR
+              hp='$text' AND tanggal_masuk LIKE '%$date1%' OR
+              inet='$text' AND tanggal_masuk LIKE '%$date1%' OR
+              pstn='$text' AND tanggal_masuk LIKE '%$date1%' OR
+              email LIKE '%$text%' AND tanggal_masuk LIKE '%$date2%' OR
+              hp='$text' AND tanggal_masuk LIKE '%$date2%' OR
+              inet='$text' AND tanggal_masuk LIKE '%$date2%' OR
+              pstn='$text' AND tanggal_masuk LIKE '%$date2%' OR
+              email LIKE '%$text%' AND tanggal_masuk LIKE '%$date3%' OR
+              hp='$text' AND tanggal_masuk LIKE '%$date3%' OR
+              inet='$text' AND tanggal_masuk LIKE '%$date3%' OR
+              pstn='$text' AND tanggal_masuk LIKE '%$date3%' OR
+              email LIKE '%$text%' AND tanggal_masuk LIKE '%$today%' OR
+              hp='$text' AND tanggal_masuk LIKE '%$today%' OR
+              inet='$text' AND tanggal_masuk LIKE '%$today%' OR
+              pstn='$text' AND tanggal_masuk LIKE '%$today%' OR
               email LIKE '%$text%' AND status_owner<>'Closed' OR
               hp='$text' AND status_owner<>'Closed' OR
-              `inet`='$text' AND status_owner<>'Closed' OR
+              inet='$text' AND status_owner<>'Closed' OR
               pstn='$text' AND status_owner<>'Closed'
               ORDER BY tanggal_masuk ASC
-              ");
+              ")->queryAll();
+
+              if($sql){
+                $data = [];
+                foreach($sql as $c => $cs):
+                  if($cs['status_owner'] != "Closed"):
+                    $status = "On Progress \xE2\x8C\x9B";
+                  else:
+                    $status = "Closed \xE2\x9C\x85";
+                  endif;
+                  $numPhone = substr($cs['hp'], 0, 4)."****".substr($cs['hp'], 8,10);
+                  $data[] = "\xF0\x9F\x93\x8CTanggal Keluhan :<b>".date('d-m-Y H:i:s', strtotime($cs['tanggal_masuk']))."</b>\nSumber Tiket :<b>".$cs['source']."</b>\nTiket Bot :<b>".$cs['tiket']."</b>\nNama Customer :<b>".$cs['nama']."</b>\nEmail :<b>".$cs['email']."</b>\nCP :<b>".$numPhone."</b>\nNo.Internet :<b>".$cs['inet']."</b>\nPSTN :<b>".$cs['pstn']."</b>\nStatus :<b>".$status."</b>\nKeluhan :<b>".$cs['keluhan']."</b>\nPenanganan :<b>".$cs['feedback']."</b>";
+                endforeach;
+                
+                $model = implode("\n\n", $data);
+              }else{
+                $model = "<b><i>Pencarian case tidak ditemukan</i></b> \xF0\x9F\x99\x8F";
+              }
+              return $this->render('get_search_case',[
+                  'chat_id' => $chat_id,
+                  'user_tele' => $user_tele,
+                  'model' => $model
+              ]);
             break;
             case ($text == "Search" && $cek_user_actived):
               
@@ -423,6 +446,7 @@ class SiteController extends Controller
               $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM temp_cases WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM session_reg WHERE telegram_id='$user_tele'")->execute();
+              $connection->createCommand("DELETE FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->execute();
 
               $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
 
