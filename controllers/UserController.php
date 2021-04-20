@@ -838,6 +838,7 @@ class UserController extends Controller
     {
         $models = SubKategori::find()->where("id_kategori='$id_kategori'")->all();
         if($models){
+            echo "<option selected disabled>Sub Kategori</option>";
             foreach($models as $m => $model):
                 echo "<option value='".$model->id."'>".$model->sub_kategori."</option>";
             endforeach;

@@ -22,6 +22,7 @@ $this->title = Yii::t('app', 'Cases');
 $this->params['breadcrumbs'][] = $this->title;
 
 $connection = \Yii::$app->db;
+$connection2 = \Yii::$app->db2;
 
 ?>
 <style>
@@ -257,49 +258,6 @@ $connection = \Yii::$app->db;
         <div class="col-md-12">
           <div class="row-cases-form">
             <div style="">
-              <!-- testing -->
-              <?php
-                $text = '082311726195';
-                $date1 = date('Y-m-d',strtotime("1 days"));
-                $date2 = date('Y-m-d',strtotime("2 days"));
-                $date3 = date('Y-m-d',strtotime("3 days"));
-                $today = date('Y-m-d');
-                $cases = $connection->createCommand("SELECT * FROM cases WHERE
-                email LIKE '%$text%' AND tanggal_masuk='$date1' OR
-                hp='$text' AND tanggal_masuk='$date1' OR
-                `inet`='$text' AND tanggal_masuk='$date1' OR
-                pstn='$text' AND tanggal_masuk='$date1' OR
-                email LIKE '%$text%' AND tanggal_masuk='$date2' OR
-                hp='$text' AND tanggal_masuk='$date2' OR
-                `inet`='$text' AND tanggal_masuk='$date2' OR
-                pstn='$text' AND tanggal_masuk='$date2' OR
-                email LIKE '%$text%' AND tanggal_masuk='$date3' OR
-                hp='$text' AND tanggal_masuk='$date3' OR
-                `inet`='$text' AND tanggal_masuk='$date3' OR
-                pstn='$text' AND tanggal_masuk='$date3' OR
-                email LIKE '%$text%' AND tanggal_masuk='$today' OR
-                hp='$text' AND tanggal_masuk='$today' OR
-                `inet`='$text' AND tanggal_masuk='$today' OR
-                pstn='$text' AND tanggal_masuk='$today' OR
-                email LIKE '%$text%' AND status_owner<>'Closed' OR
-                hp='$text' AND status_owner<>'Closed' OR
-                `inet`='$text' AND status_owner<>'Closed' OR
-                pstn='$text' AND status_owner<>'Closed'
-                ORDER BY tanggal_masuk ASC
-                ")->queryAll();
-                $data = [];
-                foreach($cases as $c => $cs):
-                  if($cs['status_owner'] != "Closed"):
-                    $status = "On Progress \xE2\x8C\x9B";
-                  else:
-                    $status = "Closed \xE2\x9C\x85";
-                  endif;
-                  $numPhone = substr($cs['hp'], 0, 4)."****".substr($cs['hp'], 8,10);
-                  $data[] = "\xF0\x9F\x93\x93Tanggal Keluhan :<b>".date('d-m-Y H:i:s', strtotime($cs['tanggal_masuk']))."</b>\nSumber Tiket :<b>".$cs['source']."</b>Tiket Bot :<b>".$cs['tiket']."</b>\nNama Customer :<b>".$cs['nama']."</b>\nEmail :<b>".$cs['email']."</b>\nCP :<b>".$numPhone."</b>\nNo.Internet :<b>".$cs['inet']."</b>\nPSTN :<b>".$cs['pstn']."</b>\nStatus :<b>".$status."</b>\nKeluhan :<b>".$cs['keluhan']."</b>\nPenanganan :<b>".$cs['feedback']."</b>";
-                endforeach;
-                
-                echo implode("<br><br>", $data);
-              ?>
               <p style="font-weight:bold;font-size:0.8em;">Export to file</p>
               <?php $form2 = ActiveForm::begin([
                 'id'=>'date-range',
@@ -434,7 +392,9 @@ $connection = \Yii::$app->db;
                     
                   <?= $form->field($model, 'sub_kategori')->widget(Select2::classname(), [
                         'data' => $subkategori,
-                        'options'=>['placeholder'=>Yii::t('app','Select Sub-Kategori'), 'id' => "sub-kategori-search"],
+                        'options'=>[
+                          'placeholder'=>Yii::t('app','Select Sub-Kategori'), 'id' => "sub-kategori-search"
+                        ],
                         'pluginOptions' => [
                             'allowClear' => true,
                         ],

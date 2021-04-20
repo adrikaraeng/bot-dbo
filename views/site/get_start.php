@@ -25,7 +25,7 @@ use yii\helpers\Url;
         ]
     ];
 
-    Yii::$app->telegram->sendMessage("Hai <b>$nama_depan</b>,\nWaktu mulai sistem pada <b>$start_date</b>,\nSilahkan pilih kebutuhan anda:", $chat_id, [
+    Yii::$app->telegram->sendMessage("Hai <b>$nama_depan</b>,$load_info\nWaktu mulai sistem pada <b>$start_date</b>,\nSilahkan pilih kebutuhan anda:", $chat_id, [
         'reply_markup' => json_encode($keyboard),
     ]);
     
