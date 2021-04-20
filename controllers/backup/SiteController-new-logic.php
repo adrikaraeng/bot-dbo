@@ -70,7 +70,7 @@ class SiteController extends Controller
     public function actionGet_source()
     {
         $connection = \Yii::$app->db;
-        $token = 'bot1248348390:AAHP5NQxaby2z1-0AvJx7912qYWO4g2O9uM';
+        $token = 'bot1750605224:AAGmgpPzTKvcv_-1FmWm5KxYVm_FzMHD7SY';
         $data = file_get_contents("php://input");
         $data = json_decode($data, true);
         
@@ -357,7 +357,7 @@ class SiteController extends Controller
                 'max_date' => $cek_used_system['max_active_date'],
                 'load_info' => $load_info
               ]);
-
+              
             elseif($text == "Buat Tiket"):
               $connection->createCommand("DELETE FROM session_bot WHERE telegram_id='$user_tele'")->execute();
               $connection->createCommand("DELETE FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->execute();
@@ -862,7 +862,7 @@ class SiteController extends Controller
             $get_file = Yii::$app->telegram->getFile([
               'file_id' => $data['message']['photo']['1']['file_id'],
             ]);
-            $url = "https://api.telegram.org/file/bot1248348390:AAHP5NQxaby2z1-0AvJx7912qYWO4g2O9uM/".$get_file->result->file_path;
+            $url = "https://api.telegram.org/file/bot1750605224:AAGmgpPzTKvcv_-1FmWm5KxYVm_FzMHD7SY/".$get_file->result->file_path;
             $filename = basename($url);
     
             $ext = pathinfo($filename, PATHINFO_EXTENSION);

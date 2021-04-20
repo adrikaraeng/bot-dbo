@@ -19,11 +19,11 @@ $config = [
     'components' => [
         // 'telegram' => [
         //     'class' => 'aki\telegram\Telegram',
-        //     'botToken' => '1248348390:AAGHKbmdXFhJgjtRvV-7qqvmHfxzJPqRLPY',
+        //     'botToken' => '1750605224:AAGmgpPzTKvcv_-1FmWm5KxYVm_FzMHD7SY',
         // ],
         'telegram' => [
             'class' => 'mirkhamidov\telegramBot\TelegramBot',
-            'botToken' => '1248348390:AAHP5NQxaby2z1-0AvJx7912qYWO4g2O9uM',
+            'botToken' => 'bot1248348390:AAHP5NQxaby2z1-0AvJx7912qYWO4g2O9uM',
         ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
