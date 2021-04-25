@@ -330,10 +330,10 @@ $connection = \Yii::$app->db;
     </div>
     <!-- End col md 8 -->
     <div class="col-md-2">
-      <div id="new-case">
-        <div class="head-case">List New Case</div>
-        <div class="body-case">
-          <?php if($case_new != NULL):?>
+      <?php if($case_new != NULL):?>
+        <div id="new-case">
+          <div class="head-case">List New Case</div>
+          <div class="body-case">
               <?php foreach($case_new as $c_new => $cn):?>
                   <?php
                     $date_awal = new DateTime($cn->tanggal_masuk);
@@ -396,12 +396,10 @@ $connection = \Yii::$app->db;
                     </div>
                   <?php endif;?>
               <?php endforeach;?>
-          <?php else:?>
-              <i>Data not found</i>
-          <?php endif;?>
+          </div>
         </div>
-      </div>
-      <!-- End new case id -->
+        <!-- End new case id -->
+      <?php endif;?>
     </div>
     <!-- End col md 2 -->
   </div>

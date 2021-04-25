@@ -4,10 +4,39 @@ $connection = \Yii::$app->db;
 $dn = date('Y-m-d');
 $mn = date('Y-m');
 $yn = date('Y');
-// echo $dn.' '.date('H:i:s'); 
-$ods = $connection->createCommand("SELECT count(*) FROM cases as a WHERE DATE(a.tanggal_masuk) LIKE '$mn%' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END), DATE(a.tanggal_masuk))='0'")->queryScalar();
-$nods2 = $connection->createCommand("SELECT count(*) FROM cases as a WHERE DATE(a.tanggal_masuk) LIKE '$mn%' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END),DATE(a.tanggal_masuk))='1' OR DATE(a.tanggal_masuk) LIKE '$mn%' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END), DATE(a.tanggal_masuk))='2'")->queryScalar();
-$nods_more2 = $connection->createCommand("SELECT count(*) FROM cases as a WHERE DATE(a.tanggal_masuk) LIKE '$mn%' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END),DATE(a.tanggal_masuk))>'2'")->queryScalar();
+// echo $dn.' '.date('H:i:s');
+
+$total_cases_yr = $connection->createCommand("SELECT count(*) FROM cases WHERE YEAR(tanggal_masuk)='$yn'")->queryScalar();
+$ods_yr = $connection->createCommand("SELECT count(*) FROM cases as a WHERE YEAR(a.tanggal_masuk)='$yn' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END), DATE(a.tanggal_masuk))='0'")->queryScalar();
+$nods_yr = $total_cases_yr - $ods_yr;
+// echo $nods_yr;
+if($total_cases_yr != 0):
+  $p_ods_yr = ($ods_yr/$total_cases_yr)*100;
+else:
+  $p_ods_yr = '0';
+endif;
+
+$total_cases_bln = $connection->createCommand("SELECT count(*) FROM cases WHERE tanggal_masuk LIKE '$mn%'")->queryScalar();
+$ods_bln = $connection->createCommand("SELECT count(*) FROM cases as a WHERE a.tanggal_masuk LIKE '$mn%' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END), DATE(a.tanggal_masuk))='0'")->queryScalar();
+$nods_bln = $total_cases_bln - $ods_bln;
+if($total_cases_bln != 0):
+  $p_ods_bln = ($ods_bln/$total_cases_bln)*100;
+else:
+  $p_ods_bln = '0';
+endif;
+
+$total_cases_today = $connection->createCommand("SELECT count(*) FROM cases WHERE tanggal_masuk LIKE '$dn%'")->queryScalar();
+$ods_today = $connection->createCommand("SELECT count(*) FROM cases as a WHERE a.tanggal_masuk LIKE '$dn%' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END), DATE(a.tanggal_masuk))='0'")->queryScalar();
+$nods_today = $total_cases_today - $ods_today;
+if($total_cases_today != 0):
+  $p_ods_today = ($ods_today/$total_cases_today)*100;
+else:
+  $p_ods_today = '0';
+endif;
+
+$ods = $connection->createCommand("SELECT count(*) FROM cases as a WHERE YEAR(a.tanggal_masuk)='$yn' AND DATE(a.tanggal_masuk) LIKE '$mn%' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END), DATE(a.tanggal_masuk))='0'")->queryScalar();
+$nods2 = $connection->createCommand("SELECT count(*) FROM cases as a WHERE YEAR(a.tanggal_masuk)='$yn' AND DATE(a.tanggal_masuk) LIKE '$mn%' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END),DATE(a.tanggal_masuk))='1' OR DATE(a.tanggal_masuk) LIKE '$mn%' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END), DATE(a.tanggal_masuk))='2'")->queryScalar();
+$nods_more2 = $connection->createCommand("SELECT count(*) FROM cases as a WHERE YEAR(a.tanggal_masuk)='$yn' AND  DATE(a.tanggal_masuk) LIKE '$mn%' AND DATEDIFF((CASE WHEN a.tanggal_closed IS NULL THEN '$dn' ELSE DATE(a.tanggal_closed) END),DATE(a.tanggal_masuk))>'2'")->queryScalar();
 
 //All month
 $list12month = $connection->createCommand("SELECT *, 
@@ -145,7 +174,31 @@ GROUP BY kategori ORDER BY c_kategori ASC LIMIT 10")->queryAll();
     padding:4px;
     border-radius:4px;
   }
+  #back-home{
+    background-color:#fff;
+    position:fixed;
+    right:10px;
+    bottom:10px;
+    padding: 5px;
+    border-radius:50%;
+    border: 1px solid #f42e0b;
+    cursor: pointer;
+    z-index: 9999;
+  }
+  #back-home:hover{
+    border: 1px solid #c62509;
+  }
+  #btn-back-home{
+    color:#f42e0b;
+    font-size:2.0em;
+  }
+  #btn-back-home:hover{
+    color:#c62509;
+  }
 </style>
+<span id="back-home" title="Quit">
+  <i id="btn-back-home" class="fa fa-arrow-alt-circle-right"></i>
+</span>
 <div class="index-dashboard">
     <?php
       $yn_nama_kategori = [];
@@ -216,19 +269,19 @@ GROUP BY kategori ORDER BY c_kategori ASC LIMIT 10")->queryAll();
           <div class="col-lg-4">
             <div id="title-panel"><?=date('Y')?></div>
             <div id="performance-rate-close-yn">
-              <div style="font-size:2.0em;font-weight:bold;color:#32c617;"><span class="count"><?=$percent_yn_perform?></span>%</div>
+              <div style="font-size:2.0em;font-weight:bold;color:#32c617;"><span class="count"><?=$p_ods_yr?></span>%</div>
             </div>
           </div>
           <div class="col-lg-4">
             <div id="title-panel"><?=date('M Y')?></div>
             <div id="performance-rate-close-mn">
-              <div style="font-size:2.0em;font-weight:bold;color:#8618fe;"><span class="count"><?=$percent_mn_perform?></span>%</div>
+              <div style="font-size:2.0em;font-weight:bold;color:#8618fe;"><span class="count"><?=$p_ods_bln?></span>%</div>
             </div>
           </div>
           <div class="col-lg-4">
             <div id="title-panel">TODAY</div>
             <div id="performance-rate-close-dn">
-              <div style="font-size:2.0em;font-weight:bold;color:#0021bb;"><span class="count"><?=$percent_dn_perform?></span>%</div>
+              <div style="font-size:2.0em;font-weight:bold;color:#0021bb;"><span class="count"><?=$p_ods_today?></span>%</div>
             </div>
           </div>
         </div> <!-- End col-lg-12 panel-row -->
@@ -259,6 +312,13 @@ GROUP BY kategori ORDER BY c_kategori ASC LIMIT 10")->queryAll();
 </div><!-- End index-dashboard -->
 <?php
 $this->registerJS("
+$('#back-home').click(function(){
+  $.ajax({
+    url:'goto-index',
+    type: 'post',
+  });
+  return false;
+});
 $('.count').each(function () {
   $(this).prop('Counter',0).animate({
       Counter: $(this).text()
@@ -481,6 +541,9 @@ var chart_d = new CanvasJS.Chart("count_kategori_today", {
     theme: "light2", //"light1", "dark1", "dark2"
     title:{
       text: ""             
+    },
+    axisX:{
+      labelFontSize: 15,
     },
     axisY:{
       // interval: 10

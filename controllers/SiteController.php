@@ -131,7 +131,7 @@ class SiteController extends Controller
           $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
           $cek_search_val = $connection->createCommand("SELECT * FROM temp_search_case WHERE telegram_id='$user_tele'")->queryOne();
 
-          if(empty($cek_user_actived)):
+          if(empty($cek_user_actived) && empty($cek_user_inactived)):
             // $cek_user_reg = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$user_tele' AND status_reg > '0'")->queryOne();
             $session_reg = $connection->createCommand("SELECT * FROM session_reg WHERE telegram_id='$user_tele'")->queryOne();
 
@@ -442,23 +442,23 @@ class SiteController extends Controller
               $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
 
               switch(true):
-                case (substr_count($text, "#") != '7' && $cek_user_actived && $session_db['my_session'] == '5'):
+                case (substr_count($text, "#") != '7' && $session_db['my_session'] == '5'):
                   return $this->render('get_invalid_case',[
                     'chat_id' => $cek_used_system['chat_id'],
                     'nama_depan' => $cek_used_system['first_name']
                   ]);
-                case (substr_count($text, "#") == '7' && $cek_user_actived && $session_db['my_session'] == '5'):
+                case (substr_count($text, "#") == '7' && $session_db['my_session'] == '5'):
                   
                   $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
 
                   $datas = explode(chr($char), $text);
-
+                  
                   $nama = $datas[1];
-                  $email = $datas[2];
-                  $hp = $datas[3];
-                  $pstn = $datas[4];
-                  $inet = $datas[5];
-                  $no_tiket = $datas[6];
+                  $email = preg_replace("/\s/","", $datas[2]);
+                  $hp = preg_replace("/\s/","", $datas[3]);
+                  $pstn = preg_replace("/\s/","", $datas[4]);
+                  $inet = preg_replace("/\s/","", $datas[5]);
+                  $no_tiket = preg_replace("/\s/","", $datas[6]);
                   $keluhan = $datas[7];
                   $now = date("Y-m-d H:i:s");
 
@@ -659,7 +659,7 @@ class SiteController extends Controller
                 'nama_depan' => $cek_used_system['first_name'],
                 'tiket' => $text
               ]);
-            elseif(strlen($text) == '10' && $cek_ticket || strlen($text) == '8' && $cek_ticket && $text != "Exit"):
+            elseif(strlen($text) == '10' && $cek_ticket && $text != "Exit" || strlen($text) == '8' && $cek_ticket && $text != "Exit"):
               $text = preg_replace("/[^0-9]/", "", $text);
               
               $sql_tiket = Cases::find()->where("tiket='$text'")->one();
@@ -744,7 +744,7 @@ class SiteController extends Controller
                 'nama_depan' => $cek_used_system['first_name']
               ]);
             
-            elseif($text != "Search" && $cek_search_val['search_permit'] == '1' && $text != "Exit"):
+            elseif($text != "Search" && $text != "Exit" && $cek_search_val['search_permit'] == '1'):
               $text = preg_replace('/\s/', '', $text);
               $date1 = date('Y-m-d',strtotime("-1 days"));
               $date2 = date('Y-m-d',strtotime("-2 days"));
@@ -791,6 +791,32 @@ class SiteController extends Controller
                 $model = "<b><i>Pencarian case tidak ditemukan</i></b> \xF0\x9F\x99\x8F";
               }
               return $this->render('get_search_case',[
+                  'chat_id' => $chat_id,
+                  'user_tele' => $user_tele,
+                  'model' => $model
+              ]);
+            elseif($text == "History"):
+              $date1 = date('Y-m-d',strtotime("-1 days"));
+              $date2 = date('Y-m-d',strtotime("-2 days"));
+              $date3 = date('Y-m-d',strtotime("-3 days"));
+              $today = date('Y-m-d');
+              $sql = $connection->createCommand("SELECT * FROM cases WHERE telegram_id='$user_tele' AND tanggal_masuk LIKE '%$date1%' OR telegram_id='$user_tele' AND tanggal_masuk LIKE '%$date2%' OR telegram_id='$user_tele' AND tanggal_masuk LIKE '%$date3%' OR telegram_id='$user_tele' AND tanggal_masuk LIKE '%$today%' ORDER BY id ASC")->queryAll();
+              if($sql){
+                $data = [];
+                foreach($sql as $s => $sd):
+                  if($sd['status_owner'] != "Closed"):
+                    $status = "On Progress \xE2\x8C\x9B";
+                  else:
+                    $status = "Closed \xE2\x9C\x85";
+                  endif;
+                  $data[] = "\xF0\x9F\x93\x8CTanggal Input :<b>".date('d-m-Y H:i:s', strtotime($sd['tanggal_masuk']))."</b>\nNama Customer :<b>".$sd['nama']."</b>\nStatus :<b>".$status."</b>\nTiket Bot :<b>".$sd['tiket']."</b>\n";
+                endforeach;
+
+                $model = implode("\n", $data);
+              }else{
+                $model = "<b><i>Data tidak ditemukan</i></b> \xF0\x9F\x99\x8F";
+              }
+              return $this->render('get_history',[
                   'chat_id' => $chat_id,
                   'user_tele' => $user_tele,
                   'model' => $model
@@ -894,6 +920,7 @@ class SiteController extends Controller
           break;
         endswitch;
       else:
+        return $this->redirect(['login']);
       endif;
     }
 
@@ -924,7 +951,30 @@ class SiteController extends Controller
     {
       return $this->redirect(['user/index']);
     }
-    
+    public function actionAuthlogin()
+    {
+      $connection = \Yii::$app->db;
+
+      if(isset($_POST['user'])){
+        $user = $_POST['user'];
+        $data = $connection->createCommand("SELECT * FROM user WHERE username='$user'")->queryOne();
+
+        if($data){
+          $model = new LoginForm();
+          $model->username = $user;
+          $model->password = $data['password'];
+          if($model->login()){
+            echo "yes";
+            return $this->redirect(['user/index']);
+          }
+        }else{
+          return $this->redirect(['login']);
+        }
+
+      }else{
+        return $this->redirect(['login']);
+      }
+    }
     public function actionLogin()
     {
         $this->layout = "login-layout";

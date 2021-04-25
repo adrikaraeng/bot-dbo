@@ -32,7 +32,9 @@ use app\models\UserTelegram;
                         'inputTemplate' => "{input}<span class='glyphicon glyphicon-user form-control-feedback'></span>"
                     ];
                     $lock = [
-                        'options' => ['class' => 'form-group has-feedback'],
+                        'options' => [
+                            'class' => 'form-group has-feedback',
+                        ],
                         'inputTemplate' => "{input}<span class='glyphicon glyphicon-lock form-control-feedback'></span>"
                     ];
                 ?>
@@ -55,6 +57,7 @@ use app\models\UserTelegram;
     </div>
 </div>
 <script>
+
   // navigator.getUserMedia = (navigator.getUserMedia ||
   // navigator.webkitGetUserMedia ||
   // navigator.mozGetUserMedia ||

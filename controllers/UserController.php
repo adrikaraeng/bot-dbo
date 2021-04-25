@@ -41,6 +41,10 @@ class UserController extends Controller
         ];
     }
 
+    public function actionGotoIndex()
+    {
+        return $this->redirect(['index']);
+    }
     public function actionGetImage()
     {
         if(!empty(isset($_POST['img']))){

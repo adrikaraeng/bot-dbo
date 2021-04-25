@@ -19,6 +19,9 @@ use yii\helpers\Url;
             ],
             [
                 [
+                    'text' => "History",
+                ],
+                [
                     'text' => "Exit"
                 ]
             ]

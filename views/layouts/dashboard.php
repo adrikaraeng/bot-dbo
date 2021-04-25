@@ -46,48 +46,16 @@ $duser = $connection->createCommand("SELECT * FROM user WHERE id='$id'")->queryO
 </style>
 <body>
 <?php $this->beginBody() ?>
-
-<div class="wrap">
-    <?php
-    NavBar::begin([
-        'brandLabel' => "<b id='dashboard-title'>Manohara</b>",
-        'brandUrl' => '',
-        'options' => [
-            'class' => 'navbar-default navbar-fixed-top',
-        ],
-    ]);
-    echo Nav::widget([
-        'options' => ['class' => 'navbar-nav navbar-right'],
-        'items' => [
-            ['label' => 'Dashboard', 'url' => ['dashboard']],
-            ['label' => 'Home', 'url' => ['index']],
-            Yii::$app->user->isGuest ? (
-                ['label' => 'Login', 'url' => ['/site/login']]
-            ) : (
-                '<li>'
-                . Html::beginForm(['/site/logout'], 'post')
-                . Html::submitButton(
-                    'Logout (' . Yii::$app->user->identity->username . ')',
-                    ['class' => 'btn btn-link logout']
-                )
-                . Html::endForm()
-                . '</li>'
-            )
-        ],
-    ]);
-    NavBar::end();
-    ?>
-
-    <div id="webcam-pic" class="wow tada" data-wow-iteration="infinite"  data-wow-duration="1800ms">
-      <?php if($duser['webcam'] != ''):?>
-        <?=Html::img("@web/images/webcam/".$duser['webcam'],['style'=>"width:60px;height:60px;border-radius:50px;border:2px solid #0005d2;"])?>
-      <?php else:?>
-        <?=Html::img("@web/images/webcam/default.png",['style'=>"width:60px;height:60px;border-radius:50px;border:2px solid #0005d2;"])?>
-      <?php endif;?>
-    </div>
-    <div class="container2">
-        <?= $content ?>
-    </div>
+  <div id="webcam-pic" class="wow tada" data-wow-iteration="infinite"  data-wow-duration="1800ms">
+    <?php if($duser['webcam'] != ''):?>
+      <?=Html::img("@web/images/webcam/".$duser['webcam'],['style'=>"width:60px;height:60px;border-radius:50px;border:2px solid #0005d2;"])?>
+    <?php else:?>
+      <?=Html::img("@web/images/webcam/default.png",['style'=>"width:60px;height:60px;border-radius:50px;border:2px solid #0005d2;"])?>
+    <?php endif;?>
+  </div>
+  <div class="container2">
+      <?= $content ?>
+  </div>
 </div>
 
 <?php $this->endBody() ?>

@@ -23,7 +23,7 @@ $config = [
         // ],
         'telegram' => [
             'class' => 'mirkhamidov\telegramBot\TelegramBot',
-            'botToken' => 'bot1248348390:AAHP5NQxaby2z1-0AvJx7912qYWO4g2O9uM',
+            'botToken' => '1248348390:AAHP5NQxaby2z1-0AvJx7912qYWO4g2O9uM',
         ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
@@ -68,11 +68,15 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                // '<controller:\w+>/<id:\d+>' => '<controller>/view',
+                // '<controller:\w+>/<action:\w+>/<id:\d+>' => '<controller>/<action>',
+                // '<controller:\w+>/<action:\w+>' => '<controller>/<action>'
             ],
         ],
         
     ],
     'params' => $params,
+    // 'defaultRoute' => 'site/login',
 ];
 
 if (YII_ENV_DEV) {
@@ -88,7 +92,8 @@ if (YII_ENV_DEV) {
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
+        'allowedIPs' => ['127.0.0.1', '::1'],
+        // 'password' => 'adrey'
     ];
 }
 
