@@ -587,17 +587,18 @@ class SiteController extends Controller
               ], Yii::$app->mailer->htmlLayout));
               $r_source->send();
               
-              $r_dbo = \Yii::$app->mailer->compose();
-              $r_dbo->setFrom("tiketmyindihomebot@gmail.com");
-              $r_dbo->setTo('team.dbo.bogor@gmail.com');
-              $r_dbo->setSubject("Tiket myIndiHome bot : ".$cek_case['tiket']);
-              // $r_dbo->setTextBody("Plain text content");
-              $r_dbo->setHtmlBody(Yii::$app->mailer->render('/site/receiver-mail-dbo', [
-                'cek_case' => $cek_case,
-                'r_dbo' => $r_dbo,
-                'sumber' => $sumber
-              ], Yii::$app->mailer->htmlLayout));
-              $r_dbo->send();
+              // $r_dbo = \Yii::$app->mailer->compose();
+              // $r_dbo->setFrom("tiketmyindihomebot@gmail.com");
+              // $r_dbo->setTo('team.dbo.bogor@gmail.com');
+              // $r_dbo->setSubject("Tiket myIndiHome bot : ".$cek_case['tiket']);
+              // // $r_dbo->setTextBody("Plain text content");
+              // $r_dbo->setHtmlBody(Yii::$app->mailer->render('/site/receiver-mail-dbo', [
+              //   'cek_case' => $cek_case,
+              //   'r_dbo' => $r_dbo,
+              //   'sumber' => $sumber,
+              //   'nama_depan' => $nama_depan
+              // ], Yii::$app->mailer->htmlLayout));
+              // $r_dbo->send();
 
               return $this->render('get_end',[
                 'chat_id' => $chat_id,
@@ -833,7 +834,7 @@ class SiteController extends Controller
                   else:
                     $status = "Closed \xE2\x9C\x85";
                   endif;
-                  $data[] = "\xF0\x9F\x93\x8CTanggal Input :<b>".date('d-m-Y H:i:s', strtotime($sd['tanggal_masuk']))."</b>\nNama Customer :<b>".$sd['nama']."</b>\nStatus :<b>".$status."</b>\nTiket Bot :<b>".$sd['tiket']."</b>\n";
+                  $data[] = "\xF0\x9F\x93\x8CTanggal Input :<b>".date('d-m-Y H:i:s', strtotime($sd['tanggal_masuk']))."</b>\nTiket Bot :<b>".$sd['tiket']."</b>\nNama Customer :<b>".$sd['nama']."</b>\nStatus :<b>".$status."</b>\n";
                 endforeach;
 
                 $model = implode("\n", $data);
@@ -841,9 +842,9 @@ class SiteController extends Controller
                 $model = "<b><i>Data tidak ditemukan</i></b> \xF0\x9F\x99\x8F";
               }
               return $this->render('get_history',[
-                  'chat_id' => $chat_id,
-                  'user_tele' => $user_tele,
-                  'model' => $model
+                'chat_id' => $chat_id,
+                'user_tele' => $user_tele,
+                'model' => $model
               ]);
             elseif($text == "Exit"):
               $connection->createCommand("DELETE FROM temp_source WHERE telegram_id='$user_tele'")->execute();
@@ -931,17 +932,18 @@ class SiteController extends Controller
             ], Yii::$app->mailer->htmlLayout));
             $r_source->send();
             
-            $r_dbo = \Yii::$app->mailer->compose();
-            $r_dbo->setFrom("tiketmyindihomebot@gmail.com");
-            $r_dbo->setTo('team.dbo.bogor@gmail.com');
-            $r_dbo->setSubject("Tiket myIndiHome bot : ".$cek_case['tiket']);
-            // $r_dbo->setTextBody("Plain text content");
-            $r_dbo->setHtmlBody(Yii::$app->mailer->render('/site/receiver-mail-dbo', [
-              'cek_case' => $cek_case,
-              'r_dbo' => $r_dbo,
-              'sumber' => $sumber
-            ], Yii::$app->mailer->htmlLayout));
-            $r_dbo->send();
+            // $r_dbo = \Yii::$app->mailer->compose();
+            // $r_dbo->setFrom("tiketmyindihomebot@gmail.com");
+            // $r_dbo->setTo('team.dbo.bogor@gmail.com');
+            // $r_dbo->setSubject("Tiket myIndiHome bot : ".$cek_case['tiket']);
+            // // $r_dbo->setTextBody("Plain text content");
+            // $r_dbo->setHtmlBody(Yii::$app->mailer->render('/site/receiver-mail-dbo', [
+            //   'cek_case' => $cek_case,
+            //   'r_dbo' => $r_dbo,
+            //   'sumber' => $sumber,
+            //   'nama_depan' => $nama_depan
+            // ], Yii::$app->mailer->htmlLayout));
+            // $r_dbo->send();
               
             $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
               

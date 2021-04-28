@@ -25,7 +25,7 @@ use yii\helpers\Url;
     <p>
       Berikut detail data case melalui <a href='https://t.me/tiketmyindihomebot'>@tiketmyindihome</a><br><br>
       Tiket bot : <b><?=$cek_case['tiket']?></b><br>
-      Sumber : <b><?=$sumber['layanan']."/".$sumber['nama_lengkap']?></b><br>
+      Sumber : <b><?=$sumber['layanan']."/".$nama_depan?></b><br>
       Regional/Witel : <b><?=$sumber['regional']."/".$sumber['witel']?></b><br><br>
       
       <div class="detail-case">
