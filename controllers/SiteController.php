@@ -70,7 +70,7 @@ class SiteController extends Controller
     public function actionGet_source()
     {
         $connection = \Yii::$app->db;
-        $token = 'bot1248348390:AAHP5NQxaby2z1-0AvJx7912qYWO4g2O9uM';
+        $token = 'bot1248348390:AAEmkw4kNOGUHL-a21gD-lcR0gSMSuihJLs';
         $data = file_get_contents("php://input");
         $data = json_decode($data, true);
         
@@ -519,8 +519,8 @@ class SiteController extends Controller
 
                     if(!empty($cek_exist_case)){
                       return $this->render('get_choose_created_double',[
-                        'chat_id' => $cek_used_system['chat_id'],
-                        'nama_depan' => $cek_used_system['first_name'],
+                        'chat_id' => $chat_id,
+                        'nama_depan' => $nama_depan,
                         'tiket' => $cek_exist_case['tiket'],
                         'keluhan' => $cek_exist_case['keluhan'],
                       ]);
@@ -550,39 +550,62 @@ class SiteController extends Controller
                       $case->save(false);
 
                       return $this->render('get_pictures',[
-                        'chat_id' => $cek_used_system['chat_id'],
-                        'nama_depan' => $cek_used_system['first_name']
+                        'chat_id' => $chat_id,
+                        'nama_depan' => $nama_depan
                       ]);  
                     }
                   endif;
                   break;
                 default:
                   return $this->render('get_case',[
-                    'chat_id' => $cek_used_system['chat_id'],
-                    'nama_depan' => $cek_used_system['first_name']
+                    'chat_id' => $chat_id,
+                    'nama_depan' => $nama_depan
                   ]);
               endswitch;
-            elseif($text == 'Skip >>' && $session_db['my_session'] == "6"):
-              $email = $connection->createCommand("SELECT * FROM temp_email WHERE telegram_id='$user_tele'")->queryOne();
-              $source = $connection->createCommand("SELECT * FROM temp_source WHERE telegram_id='$user_tele'")->queryOne();
-              $kategori = $connection->createCommand("SELECT * FROM temp_kategori WHERE telegram_id='$user_tele'")->queryOne();
-              $cek_kategori = $connection->createCommand("SELECT * FROM kategori WHERE nama_kategori='$kategori[kategori]'")->queryOne();
+            elseif($text != "Continue" && $session_db['my_session'] == "6"):
               $cek_case = $connection->createCommand("SELECT * FROM cases WHERE telegram_id='$user_tele' ORDER BY id DESC")->queryOne();
 
-              $update_case = $connection->createCommand("UPDATE cases SET source='$source[source]',source_email='$email[email]',kategori='$cek_kategori[id]' WHERE id='$cek_case[id]' AND telegram_id='$user_tele'")->execute();
-              
-              $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
-                
-              return $this->render('get_end',[
-                'chat_id' => $cek_used_system['chat_id'],
-                'nama_depan' => $cek_used_system['first_name'],
-                'tiket' => $cek_case['tiket'],
-                'user_tele' => $cek_used_system['telegram_id']
-              ]);
-            
-            elseif($text == "Continue" && $session_db['my_session'] == '6'):
-              $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
+              if(strstr($text,"Skip >>") || strstr($text,"skip >>") || strstr($text,"Skip") || strstr($text,"skip")):
+                $email = $connection->createCommand("SELECT * FROM temp_email WHERE telegram_id='$user_tele'")->queryOne();
+                $source = $connection->createCommand("SELECT * FROM temp_source WHERE telegram_id='$user_tele'")->queryOne();
+                $kategori = $connection->createCommand("SELECT * FROM temp_kategori WHERE telegram_id='$user_tele'")->queryOne();
+                $cek_kategori = $connection->createCommand("SELECT * FROM kategori WHERE nama_kategori='$kategori[kategori]'")->queryOne();
 
+                $connection->createCommand("UPDATE cases SET source='$source[source]',source_email='$email[email]',kategori='$cek_kategori[id]' WHERE id='$cek_case[id]' AND telegram_id='$user_tele'")->execute();
+              endif;
+              $cek_case = $connection->createCommand("SELECT * FROM cases WHERE telegram_id='$user_tele' ORDER BY id DESC")->queryOne();
+              $sumber = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$cek_case[telegram_id]'")->queryOne();
+
+              $r_source = \Yii::$app->mailer->compose();
+              $r_source->setFrom("tiketmyindihomebot@gmail.com");
+              $r_source->setTo(strtolower(preg_replace('/\s/',' ',$cek_case['source_email'])));
+              $r_source->setSubject("Tiket myIndiHome bot : ".$cek_case['tiket']);
+              $r_source->setHtmlBody(Yii::$app->mailer->render('/site/receiver-mail-source', [
+                'cek_case' => $cek_case,
+                'r_source' => $r_source,
+                'nama_depan' => $nama_depan
+              ], Yii::$app->mailer->htmlLayout));
+              $r_source->send();
+              
+              $r_dbo = \Yii::$app->mailer->compose();
+              $r_dbo->setFrom("tiketmyindihomebot@gmail.com");
+              $r_dbo->setTo('team.dbo.bogor@gmail.com');
+              $r_dbo->setSubject("Tiket myIndiHome bot : ".$cek_case['tiket']);
+              // $r_dbo->setTextBody("Plain text content");
+              $r_dbo->setHtmlBody(Yii::$app->mailer->render('/site/receiver-mail-dbo', [
+                'cek_case' => $cek_case,
+                'r_dbo' => $r_dbo,
+                'sumber' => $sumber
+              ], Yii::$app->mailer->htmlLayout));
+              $r_dbo->send();
+
+              return $this->render('get_end',[
+                'chat_id' => $chat_id,
+                'nama_depan' => $nama_depan,
+                'tiket' => $cek_case['tiket'],
+                'user_tele' => $user_tele
+              ]);
+            elseif($text == "Continue" && $session_db['my_session'] == '6'):
               $get_case = $connection->createCommand("SELECT * FROM temp_cases WHERE telegram_id='$user_tele'")->queryOne();
 
               $now = date("Y-m-d H:i:s");
@@ -610,8 +633,8 @@ class SiteController extends Controller
               $case->save(false);
 
               return $this->render('get_pictures',[
-                'chat_id' => $cek_used_system['chat_id'],
-                'nama_depan' => $cek_used_system['first_name']
+                'chat_id' => $chat_id,
+                'nama_depan' => $nama_depan
               ]);
             elseif($text == "Cancel" || $text == "cancel"):
               $connection->createCommand("DELETE FROM temp_source WHERE telegram_id='$user_tele'")->execute();
@@ -725,7 +748,8 @@ class SiteController extends Controller
             
               $sql = $connection->createCommand()->insert('temp_search_case', [
                   'search_permit' => '1',
-                  'telegram_id' => $user_tele
+                  'telegram_id' => $user_tele,
+                  'chat_id' => $chat_id
               ])->execute();
 
               $connection->createCommand("DELETE FROM temp_source WHERE telegram_id='$user_tele'")->execute();
@@ -864,22 +888,6 @@ class SiteController extends Controller
         $cek_user_actived = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$user_tele' AND status='on'")->queryOne();
         $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
 
-        if($cek_used_system && $cek_used_system['max_active_date'] <= date('Y-m-d H:i:s')):
-          $connection->createCommand("DELETE FROM temp_source WHERE telegram_id='$user_tele'")->execute();
-          $connection->createCommand("DELETE FROM temp_kategori WHERE telegram_id='$user_tele'")->execute();
-          $connection->createCommand("DELETE FROM temp_email WHERE telegram_id='$user_tele'")->execute();
-          $connection->createCommand("DELETE FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->execute();
-          $connection->createCommand("DELETE FROM session_bot WHERE telegram_id='$user_tele'")->execute();
-          $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();
-          $connection->createCommand("DELETE FROM temp_active_id WHERE telegram_id='$user_tele'")->execute();
-          $connection->createCommand("DELETE FROM temp_cases WHERE telegram_id='$user_tele'")->execute();
-
-          return $this->render('get_end_maxduration',[
-              'chat_id' => $chat_id,
-              'nama_depan' => $nama_depan
-          ]);
-        endif;
-
         // $agg = json_encode($chat_id, JSON_PRETTY_PRINT);
         // Yii::$app->telegram->sendMessage($nama_depan, $chat_id);
 
@@ -888,7 +896,7 @@ class SiteController extends Controller
             $get_file = Yii::$app->telegram->getFile([
               'file_id' => $data['message']['photo']['1']['file_id'],
             ]);
-            $url = "https://api.telegram.org/file/bot1248348390:AAHP5NQxaby2z1-0AvJx7912qYWO4g2O9uM/".$get_file->result->file_path;
+            $url = "https://api.telegram.org/file/bot1248348390:AAEmkw4kNOGUHL-a21gD-lcR0gSMSuihJLs/".$get_file->result->file_path;
             $filename = basename($url);
     
             $ext = pathinfo($filename, PATHINFO_EXTENSION);
@@ -908,6 +916,32 @@ class SiteController extends Controller
 
             // $update_case = $connection->createCommand("UPDATE cases SET source='$source[source]',source_email='$email[email]',kategori='$cek_kategori[id]' WHERE id='$cek_case[id]' AND telegram_id='$user_tele'")->execute();
             $update_case = $connection->createCommand("UPDATE cases SET source='$source[source]',source_email='$email[email]',kategori='$cek_kategori[id]', gambar='$update_image' WHERE id='$cek_case[id]'")->execute();
+            
+            $cek_case = $connection->createCommand("SELECT * FROM cases WHERE telegram_id='$user_tele' ORDER BY id DESC")->queryOne();
+            $sumber = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$cek_case[telegram_id]'")->queryOne();
+
+            $r_source = \Yii::$app->mailer->compose();
+            $r_source->setFrom("tiketmyindihomebot@gmail.com");
+            $r_source->setTo(strtolower(preg_replace('/\s/',' ',$cek_case['source_email'])));
+            $r_source->setSubject("Tiket myIndiHome bot : ".$cek_case['tiket']);
+            $r_source->setHtmlBody(Yii::$app->mailer->render('/site/receiver-mail-source', [
+              'cek_case' => $cek_case,
+              'r_source' => $r_source,
+              'nama_depan' => $nama_depan
+            ], Yii::$app->mailer->htmlLayout));
+            $r_source->send();
+            
+            $r_dbo = \Yii::$app->mailer->compose();
+            $r_dbo->setFrom("tiketmyindihomebot@gmail.com");
+            $r_dbo->setTo('team.dbo.bogor@gmail.com');
+            $r_dbo->setSubject("Tiket myIndiHome bot : ".$cek_case['tiket']);
+            // $r_dbo->setTextBody("Plain text content");
+            $r_dbo->setHtmlBody(Yii::$app->mailer->render('/site/receiver-mail-dbo', [
+              'cek_case' => $cek_case,
+              'r_dbo' => $r_dbo,
+              'sumber' => $sumber
+            ], Yii::$app->mailer->htmlLayout));
+            $r_dbo->send();
               
             $cek_used_system = $connection->createCommand("SELECT * FROM temp_active_id WHERE telegram_id='$user_tele'")->queryOne();
               

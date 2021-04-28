@@ -20,6 +20,9 @@ use yii\widgets\ActiveForm;
 use yii\web\UploadedFile;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use mirkhamidov\telegramBot\TelegramBot;
+use yii\web\Session;
+use app\models\UserTelegram;
 
 /**
  * UserController implements the CRUD actions for User model.
@@ -63,10 +66,43 @@ class UserController extends Controller
     }
     public function actionDashboard()
     {
-        $this->layout="dashboard";
-        return $this->render('dashboard',[
+      $connection = \Yii::$app->db;
+      // $cek_case = $connection->createCommand("SELECT * FROM cases WHERE id='148' ORDER BY id DESC")->queryOne();
+      // $sumber = $connection->createCommand("SELECT * FROM user_telegram WHERE telegram_id='$cek_case[telegram_id]'")->queryOne();
 
-        ]);
+      // $r_source = \Yii::$app->mailer->compose();
+      // $r_source->setFrom("tiketmyindihomebot@gmail.com");
+      // $r_source->setTo('adri.karaeng@gmail.com');
+      // $r_source->setSubject("Tiket myIndiHome bot : ".$cek_case['tiket']);
+      // // $r_source->setTextBody("Plain text content");
+      // // $r_source->setHtmlBody($this->renderPartial('/site/receiver-mail-source',[
+      // //   'cek_case' => $cek_case,
+      // //   'r_source' => $r_source,
+      // // ]));
+      // $r_source->setHtmlBody(Yii::$app->mailer->render('/site/receiver-mail-source', [
+      //   'cek_case' => $cek_case,
+      //   'r_source' => $r_source
+      // ], Yii::$app->mailer->htmlLayout));
+      // $r_source->send();
+      
+
+      // $r_dbo = \Yii::$app->mailer->compose();
+      // $r_dbo->setFrom("tiketmyindihomebot@gmail.com");
+      // $r_dbo->setTo('adri.karaeng@gmail.com');
+      // $r_dbo->setSubject("Tiket myIndiHome bot : ".$cek_case['tiket']);
+      // // $r_dbo->setTextBody("Plain text content");
+      // $r_dbo->setHtmlBody(Yii::$app->mailer->render('/site/receiver-mail-dbo', [
+      //   'cek_case' => $cek_case,
+      //   'r_dbo' => $r_dbo,
+      //   'sumber' => $sumber
+      // ], Yii::$app->mailer->htmlLayout));
+      // $r_dbo->send();
+      // die();
+
+      $this->layout="dashboard";
+      return $this->render('dashboard',[
+
+      ]);
     }
 
     public function actionTempIndex()
@@ -325,92 +361,132 @@ class UserController extends Controller
         $model = new ListProgressCases;
 
         if($model->load(Yii::$app->request->post())):    
-            $model->insert_date = date('Y-m-d H:i:s');
+          $model->insert_date = date('Y-m-d H:i:s');
 
-            $imageName = date('YmdHis').time();
-            // if( strlen(trim(UploadedFile::getInstance($model,'feedback_gambar'))) > 0 ):
-            //     $gambar = UploadedFile::getInstance($model,'feedback_gambar');
-            //     if($gambar != NULL):
-            //         $gambar->saveAs('images/'.$imageName.'.'.$gambar->extension);
-            //         $model->feedback_gambar = $imageName.'.'.$gambar->extension;
-            //         $model_a->feedback_gambar = $model->feedback_gambar;
-            //     endif;
-            // else:
-            //   $model->feedback_gambar = "";
-            //   $model_a->feedback_gambar = $model->feedback_gambar;
-            // endif;
-            
-            if($_POST['img'] != 'kosong'){
-                $data = $_POST['img'];
-                $data = str_replace('data:image/png;base64,', '', $data);
-                $data = str_replace(' ', '+', $data);
-                $data = base64_decode($data);
-                // $img = base64_decode($data['1']);
-    
-                file_put_contents(Yii::getAlias('@webroot/images/'.$imageName.'.png'), $data);
-                $model->feedback_gambar = $imageName.'.png';
-                $model_a->feedback_gambar = $model->feedback_gambar;
-                // print_r('image saved');
-            }else{
-                $model->feedback_gambar = NULL;
-                $model_a->feedback_gambar = $model->feedback_gambar;
-                // print_r('no image');
-            }
+          $imageName = date('YmdHis').time();
+          // if( strlen(trim(UploadedFile::getInstance($model,'feedback_gambar'))) > 0 ):
+          //     $gambar = UploadedFile::getInstance($model,'feedback_gambar');
+          //     if($gambar != NULL):
+          //         $gambar->saveAs('images/'.$imageName.'.'.$gambar->extension);
+          //         $model->feedback_gambar = $imageName.'.'.$gambar->extension;
+          //         $model_a->feedback_gambar = $model->feedback_gambar;
+          //     endif;
+          // else:
+          //   $model->feedback_gambar = "";
+          //   $model_a->feedback_gambar = $model->feedback_gambar;
+          // endif;
+          
+          if($_POST['img'] != 'kosong'){
+              $data = $_POST['img'];
+              $data = str_replace('data:image/png;base64,', '', $data);
+              $data = str_replace(' ', '+', $data);
+              $data = base64_decode($data);
+              // $img = base64_decode($data['1']);
+  
+              file_put_contents(Yii::getAlias('@webroot/images/'.$imageName.'.png'), $data);
+              $model->feedback_gambar = $imageName.'.png';
+              $model_a->feedback_gambar = $model->feedback_gambar;
+              // print_r('image saved');
+          }else{
+              $model->feedback_gambar = NULL;
+              $model_a->feedback_gambar = $model->feedback_gambar;
+              // print_r('no image');
+          }
 
-            $model_a->feedback = $_POST['ListProgressCases']['feedback'];
-            if($model->status == "Closed"):
-                $status_r = "CLOSED";
-                $model_a->closed_by = $user->username;
-                $model_a->status_owner = "Closed";
-                $model_a->tanggal_closed = $model->insert_date;
+          $model_a->feedback = $_POST['ListProgressCases']['feedback'];
+          if($model->status == "Closed"):
+              $status_r = "CLOSED";
+              $model_a->closed_by = $user->username;
+              $model_a->status_owner = "Closed";
+              $model_a->tanggal_closed = $model->insert_date;
 
-                if($cek_rebeca != NULL):
-                    $date_awal = date_create($cek_rebeca['date']);
-                    $date_closed = date_create(date('Y-m-d', strtotime($model->insert_date)));
-                    $dateClose = date('Y-m-d', strtotime($model->insert_date));
+              if($cek_rebeca != NULL):
+                  $date_awal = date_create($cek_rebeca['date']);
+                  $date_closed = date_create(date('Y-m-d', strtotime($model->insert_date)));
+                  $dateClose = date('Y-m-d', strtotime($model->insert_date));
 
-                    $diff=date_diff($date_awal,$date_closed);
-                    $age = $diff->format("%a");
-                    $connection2->createCommand("UPDATE cases SET `status`='CLOSED', closed_date='$dateClose', closed_age='$age', closed_by='$user->username', feedback_error='$model_a->feedback' WHERE id_case='$cek_rebeca[id_case]'")->execute();
-                endif;
-            else:
-                $status_r = "ON PROGRESS";
-                $model_a->closed_by = NULL;
+                  $diff=date_diff($date_awal,$date_closed);
+                  $age = $diff->format("%a");
+                  $connection2->createCommand("UPDATE cases SET `status`='CLOSED', closed_date='$dateClose', closed_age='$age', closed_by='$user->username', feedback_error='$model_a->feedback' WHERE id_case='$cek_rebeca[id_case]'")->execute();
+              endif;
+          else:
+              $status_r = "ON PROGRESS";
+              $model_a->closed_by = NULL;
+          endif;
+
+          $model->cases = $model_a->id;
+          $model->login = $user->username;
+          $backend = Backend::findOne($model->backend);
+          if($model->save(false)):
+            $connection->createCommand()->insert('history_user', [
+                'user' => $user->id,
+                'cases' => $model_a->id,
+                'status' => $status_r,
+                'date_activity' => date('Y-m-d H:i:s')
+            ])->execute();
+
+            $model_a->save(false);
+
+            if($cek_rebeca != NULL):
+              $tanggal = date('Y-m-d', strtotime($model->insert_date));
+              $waktu = date('H:i:s', strtotime($model->insert_date));
+
+              $connection2->createCommand("UPDATE cases SET  feedback_error='$model->feedback' WHERE id_case='$cek_rebeca[id_case]'")->execute();
+              $up_log_case = $connection2->createCommand()->insert('log_update_case', [
+                  'id_case' => $cek_rebeca['id_case'],
+                  'date' => "$tanggal",
+                  'time' => "$waktu",
+                  'login' => $user->username,
+                  'remark_error' => "$model_a->keluhan",
+                  'feedback_error' => "$model->feedback",
+                  'status' => "$status_r",
+                  'id_backend' => $model->backend,
+                  'value_backend' => $backend->nama_backend
+                  //'owner_group' => $model->owner_group
+              ])->execute();
             endif;
+          endif;
+              
+          $updateData = $connection->createCommand("SELECT * FROM cases WHERE id=$id")->queryOne();
+          $tele_chat_id = $updateData['telegram_id'];
+          $tele_kode_tiket = $updateData['tiket'];
+          $tele_nama_cust = $updateData['nama'];
+          $tele_email_cust = $updateData['email'];
+          $tele_hp_cust = $updateData['hp'];
+          $tele_inet = $updateData['inet'];
+          $tele_pstn = $updateData['pstn'];
+          $no_tiket = $updateData['no_tiket'];
+          $keluhan = $updateData['keluhan'];
+          $feedback = $updateData['feedback'];
+          $gambar = $updateData['feedback_gambar'];
 
-            $model->cases = $model_a->id;
-            $model->login = $user->username;
-            $backend = Backend::findOne($model->backend);
-            if($model->save(false)):
+          if($updateData['status_owner'] == "Closed"):
+            $tele_status = "Closed \xE2\x9C\x85";
+          else:
+            $tele_status = "On Progress \xE2\x8C\x9B";
+          endif;
 
-                $connection->createCommand()->insert('history_user', [
-                    'user' => $user->id,
-                    'cases' => $model_a->id,
-                    'status' => $status_r,
-                    'date_activity' => date('Y-m-d H:i:s')
-                ])->execute();
+          $feedback_msg = "Hai, berikut progress case untuk tiket <b>".$tele_kode_tiket."</b>\n\nNama Pelanggan : ".$tele_nama_cust."\nEmail : ".$tele_email_cust."\nNomor HP : ".$tele_hp_cust."\nNomor Internet : ".$tele_inet."\nPSTN : ".$tele_pstn."\nNo.Tiket/Order : ".$no_tiket."\nStatus : ".$tele_status."\nKeluhan : ".$keluhan."\n\nPenanganan : ".$feedback;
 
-                $model_a->save(false);
+          $tele_keyboard = [ 
+            'resize_keyboard' => true,
+            "keyboard" =>[
+              [
+                  [
+                      'text' => "Start",
+                  ],
+              ]
+            ]
+          ];
+          
+          Yii::$app->telegram->sendMessage($feedback_msg, $tele_chat_id, [
+            'reply_markup' => json_encode($tele_keyboard),
+          ]);
 
-                if($cek_rebeca != NULL):
-                    $tanggal = date('Y-m-d', strtotime($model->insert_date));
-                    $waktu = date('H:i:s', strtotime($model->insert_date));
-
-                    $connection2->createCommand("UPDATE cases SET  feedback_error='$model->feedback' WHERE id_case='$cek_rebeca[id_case]'")->execute();
-                    $up_log_case = $connection2->createCommand()->insert('log_update_case', [
-                        'id_case' => $cek_rebeca['id_case'],
-                        'date' => "$tanggal",
-                        'time' => "$waktu",
-                        'login' => $user->username,
-                        'remark_error' => "$model_a->keluhan",
-                        'feedback_error' => "$model->feedback",
-                        'status' => "$status_r",
-                        'id_backend' => $model->backend,
-                        'value_backend' => $backend->nama_backend
-                        //'owner_group' => $model->owner_group
-                    ])->execute();
-                endif;
-            endif;
+          if($gambar != NULL && $gambar != ''):
+            $path = \Yii::getAlias('@webroot/images')."/".$gambar;
+            Yii::$app->telegram->sendPhoto($path, $chat_id);
+          endif;
         endif;
 
         return json_encode($model_a->id);
@@ -541,13 +617,13 @@ class UserController extends Controller
                 $model2 = Cases::findOne($id);
 
                 if($model2->status_owner == "Closed"):
-                    $closed_date = date('Y-m-d', strtotime($model->tanggal_closed));
-                    $status_r = "CLOSED";
-                    $closed_by = $user->username;
+                  $closed_date = date('Y-m-d', strtotime($model->tanggal_closed));
+                  $status_r = "CLOSED";
+                  $closed_by = $user->username;
                 else:
-                    $closed_date = NULL;
-                    $status_r = "ON PROGRESS";
-                    $closed_by = NULL;
+                  $closed_date = NULL;
+                  $status_r = "ON PROGRESS";
+                  $closed_by = NULL;
                 endif;
 
                 // $connection->createCommand()->insert('history_user', [
@@ -613,8 +689,35 @@ class UserController extends Controller
                     'id_backend' => $model->backend
                     //'owner_group' => $model->owner_group
                   ])->execute();
-                endif;//endif_caserebeca_checked
+                endif;
+                //endif_caserebeca_checked
+                
+                $updateData = $connection->createCommand("SELECT * FROM cases WHERE id=$id")->queryOne();
+                $tele_chat_id = $updateData['telegram_id'];
+                $tele_kode_tiket = $updateData['tiket'];
+                $tele_nama_cust = $updateData['nama'];
+                $tele_email_cust = $updateData['email'];
+                $tele_hp_cust = $updateData['hp'];
+                $tele_inet = $updateData['inet'];
+                $tele_pstn = $updateData['pstn'];
+                $no_tiket = $updateData['no_tiket'];
+                $keluhan = $updateData['keluhan'];
+                $feedback = $updateData['feedback'];
+                $gambar = $updateData['feedback_gambar'];
 
+                if($updateData['status_owner'] == "Closed"):
+                  $tele_status = "Closed \xE2\x9C\x85";
+                else:
+                  $tele_status = "On Progress \xE2\x8C\x9B";
+                endif;
+
+                $feedback_msg = "Hai, berikut progress case untuk tiket <b>".$tele_kode_tiket."</b>\n\nNama Pelanggan : ".$tele_nama_cust."\nEmail : ".$tele_email_cust."\nNomor HP : ".$tele_hp_cust."\nNomor Internet : ".$tele_inet."\nPSTN : ".$tele_pstn."\nNo.Tiket/Order : ".$no_tiket."\nStatus : ".$tele_status."\nKeluhan : ".$keluhan."\n\nPenanganan : ".$feedback;
+                return $this->render('update-to-tele',[
+                  'chat_id' => $tele_chat_id,
+                  'feedback' => $feedback_msg,
+                  'gambar' => $gambar
+                ]);
+                die();
                 return $this->redirect(['index']);
             endif;//endif_saved
         endif;//endif_post
