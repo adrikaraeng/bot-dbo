@@ -451,53 +451,53 @@ class UserController extends Controller
             endif;
           endif;
               
-          // $updateData = $connection->createCommand("SELECT * FROM cases WHERE id=$id")->queryOne();
-          // $tele_chat_id = $updateData['telegram_id'];
-          // $tele_kode_tiket = $updateData['tiket'];
-          // $tele_nama_cust = $updateData['nama'];
-          // $tele_email_cust = $updateData['email'];
-          // $tele_hp_cust = $updateData['hp'];
-          // $tele_inet = $updateData['inet'];
-          // $tele_pstn = $updateData['pstn'];
-          // $no_tiket = $updateData['no_tiket'];
-          // $keluhan = $updateData['keluhan'];
-          // $feedback = $updateData['feedback'];
-          // $nama_gambar = $updateData['feedback_gambar'];
-          // $gambar = $updateData['feedback_gambar_blob'];
+          $updateData = $connection->createCommand("SELECT * FROM cases WHERE id=$id")->queryOne();
+          $tele_chat_id = $updateData['telegram_id'];
+          $tele_kode_tiket = $updateData['tiket'];
+          $tele_nama_cust = $updateData['nama'];
+          $tele_email_cust = $updateData['email'];
+          $tele_hp_cust = $updateData['hp'];
+          $tele_inet = $updateData['inet'];
+          $tele_pstn = $updateData['pstn'];
+          $no_tiket = $updateData['no_tiket'];
+          $keluhan = $updateData['keluhan'];
+          $feedback = $updateData['feedback'];
+          $nama_gambar = $updateData['feedback_gambar'];
+          $gambar = $updateData['feedback_gambar_blob'];
 
-          // if($updateData['status_owner'] == "Closed"):
-          //   $tele_status = "Closed \xE2\x9C\x85";
-          // else:
-          //   $tele_status = "On Progress \xE2\x8C\x9B";
-          // endif;
+          if($updateData['status_owner'] == "Closed"):
+            $tele_status = "Closed \xE2\x9C\x85";
+          else:
+            $tele_status = "On Progress \xE2\x8C\x9B";
+          endif;
 
-          // $feedback_msg = "Hai, berikut progress case untuk tiket <b>".$tele_kode_tiket."</b>\n\nNama Pelanggan : ".$tele_nama_cust."\nEmail : ".$tele_email_cust."\nNomor HP : ".$tele_hp_cust."\nNomor Internet : ".$tele_inet."\nPSTN : ".$tele_pstn."\nNo.Tiket/Order : ".$no_tiket."\nStatus : ".$tele_status."\nKeluhan : ".$keluhan."\n\nPenanganan : ".$feedback;
+          $feedback_msg = "Hai, berikut progress case untuk tiket <b>".$tele_kode_tiket."</b>\n\nNama Pelanggan : ".$tele_nama_cust."\nEmail : ".$tele_email_cust."\nNomor HP : ".$tele_hp_cust."\nNomor Internet : ".$tele_inet."\nPSTN : ".$tele_pstn."\nNo.Tiket/Order : ".$no_tiket."\nStatus : ".$tele_status."\nKeluhan : ".$keluhan."\n\nPenanganan : ".$feedback;
 
-          // $tele_keyboard = [ 
-          //   'resize_keyboard' => true,
-          //   "keyboard" =>[
-          //     [
-          //         [
-          //             'text' => "Start",
-          //         ],
-          //     ]
-          //   ]
-          // ];
+          $tele_keyboard = [ 
+            'resize_keyboard' => true,
+            "keyboard" =>[
+              [
+                  [
+                      'text' => "Start",
+                  ],
+              ]
+            ]
+          ];
           
-          // Yii::$app->telegram->sendMessage($feedback_msg, $tele_chat_id, [
-          //   'reply_markup' => json_encode($tele_keyboard),
-          // ]);
+          Yii::$app->telegram->sendMessage($feedback_msg, $tele_chat_id, [
+            'reply_markup' => json_encode($tele_keyboard),
+          ]);
 
-          // if($gambar != NULL && $gambar != ''):
-          //   file_put_contents(\Yii::getAlias('@webroot/images')."/".$nama_gambar, $gambar);
-          //   $tempGambar = \Yii::getAlias("@webroot/images/".$nama_gambar);
-          //   if(Yii::$app->telegram->sendPhoto($tempGambar, $tele_chat_id)){
-          //       $oldFile = Yii::$app->basePath."/web/images/".$nama_gambar;
-          //       if(file_exists($oldFile)):
-          //           unlink($oldFile);
-          //       endif;
-          //   }
-          // endif;
+          if($gambar != NULL && $gambar != ''):
+            file_put_contents(\Yii::getAlias('@webroot/images')."/".$nama_gambar, $gambar);
+            $tempGambar = \Yii::getAlias("@webroot/images/".$nama_gambar);
+            if(Yii::$app->telegram->sendPhoto($tempGambar, $tele_chat_id)){
+                $oldFile = Yii::$app->basePath."/web/images/".$nama_gambar;
+                if(file_exists($oldFile)):
+                    unlink($oldFile);
+                endif;
+            }
+          endif;
         endif;
 
         return json_encode($model_a->id);
@@ -710,33 +710,33 @@ class UserController extends Controller
                 endif;
                 //endif_caserebeca_checked
                 
-                // $updateData = $connection->createCommand("SELECT * FROM cases WHERE id=$id")->queryOne();
-                // $tele_chat_id = $updateData['telegram_id'];
-                // $tele_kode_tiket = $updateData['tiket'];
-                // $tele_nama_cust = $updateData['nama'];
-                // $tele_email_cust = $updateData['email'];
-                // $tele_hp_cust = $updateData['hp'];
-                // $tele_inet = $updateData['inet'];
-                // $tele_pstn = $updateData['pstn'];
-                // $no_tiket = $updateData['no_tiket'];
-                // $keluhan = $updateData['keluhan'];
-                // $feedback = $updateData['feedback'];
-                // $nama_gambar = $updateData['feedback_gambar'];
-                // $gambar = $updateData['feedback_gambar_blob'];
+                $updateData = $connection->createCommand("SELECT * FROM cases WHERE id=$id")->queryOne();
+                $tele_chat_id = $updateData['telegram_id'];
+                $tele_kode_tiket = $updateData['tiket'];
+                $tele_nama_cust = $updateData['nama'];
+                $tele_email_cust = $updateData['email'];
+                $tele_hp_cust = $updateData['hp'];
+                $tele_inet = $updateData['inet'];
+                $tele_pstn = $updateData['pstn'];
+                $no_tiket = $updateData['no_tiket'];
+                $keluhan = $updateData['keluhan'];
+                $feedback = $updateData['feedback'];
+                $nama_gambar = $updateData['feedback_gambar'];
+                $gambar = $updateData['feedback_gambar_blob'];
 
-                // if($updateData['status_owner'] == "Closed"):
-                //   $tele_status = "Closed \xE2\x9C\x85";
-                // else:
-                //   $tele_status = "On Progress \xE2\x8C\x9B";
-                // endif;
+                if($updateData['status_owner'] == "Closed"):
+                  $tele_status = "Closed \xE2\x9C\x85";
+                else:
+                  $tele_status = "On Progress \xE2\x8C\x9B";
+                endif;
 
-                // $feedback_msg = "Hai, berikut progress case untuk tiket <b>".$tele_kode_tiket."</b>\n\nNama Pelanggan : ".$tele_nama_cust."\nEmail : ".$tele_email_cust."\nNomor HP : ".$tele_hp_cust."\nNomor Internet : ".$tele_inet."\nPSTN : ".$tele_pstn."\nNo.Tiket/Order : ".$no_tiket."\nStatus : ".$tele_status."\nKeluhan : ".$keluhan."\n\nPenanganan : ".$feedback;
-                // $this->render('update-to-tele',[
-                //   'chat_id' => $tele_chat_id,
-                //   'feedback' => $feedback_msg,
-                //   'nama_gambar' => $nama_gambar,
-                //   'gambar' => $gambar
-                // ]);
+                $feedback_msg = "Hai, berikut progress case untuk tiket <b>".$tele_kode_tiket."</b>\n\nNama Pelanggan : ".$tele_nama_cust."\nEmail : ".$tele_email_cust."\nNomor HP : ".$tele_hp_cust."\nNomor Internet : ".$tele_inet."\nPSTN : ".$tele_pstn."\nNo.Tiket/Order : ".$no_tiket."\nStatus : ".$tele_status."\nKeluhan : ".$keluhan."\n\nPenanganan : ".$feedback;
+                $this->render('update-to-tele',[
+                  'chat_id' => $tele_chat_id,
+                  'feedback' => $feedback_msg,
+                  'nama_gambar' => $nama_gambar,
+                  'gambar' => $gambar
+                ]);
                 // die();
                 return $this->redirect(['index']);
             endif;//endif_saved
