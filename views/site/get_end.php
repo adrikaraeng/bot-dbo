@@ -7,7 +7,7 @@ $connection = \Yii::$app->db;
 
 $connection->createCommand("DELETE FROM temp_source WHERE telegram_id='$user_tele'")->execute();
 $connection->createCommand("DELETE FROM temp_kategori WHERE telegram_id='$user_tele'")->execute();
-$connection->createCommand("DELETE FROM temp_email WHERE telegram_id='$user_tele'")->execute();
+// $connection->createCommand("DELETE FROM temp_email WHERE telegram_id='$user_tele'")->execute();
 $connection->createCommand("DELETE FROM temp_cek_ticket WHERE telegram_id='$user_tele'")->execute();
 $connection->createCommand("DELETE FROM session_bot WHERE telegram_id='$user_tele'")->execute();
 $connection->createCommand("DELETE FROM temp_app_version WHERE telegram_id='$user_tele'")->execute();

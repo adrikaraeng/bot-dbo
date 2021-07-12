@@ -38,7 +38,7 @@ class ListProgressCases extends \yii\db\ActiveRecord
         return [
             [['backend', 'status', 'feedback'], 'required', 'message' => ''],
             [['cases', 'backend'], 'integer'],
-            [['feedback', 'status'], 'string'],
+            [['feedback', 'status', 'feedback_gambar_blob'], 'string'],
             [['feedback_gambar'],
                 'file',
                 'extensions' => 'jpg, jpeg, png', 

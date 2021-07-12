@@ -42,7 +42,7 @@ use yii\helpers\Url;
         <?php endif;?>
         <br>
         Saat ini sudah kami terima dan sedang dalam proses penanganan <?="\xF0\x9F\x99\x8F"?>, silahkan melakukan pengecekan status tiket secara berkala di <a href="https://t.me/tiketmyindihomebot">@tiketmyindihome</a>. <br><br>
-        <b>Best Regards</b><br>#DBOmyIndiHomebr<br>Terima kasih
+        <b>Best Regards</b><br>#DBOmyIndiHome<br>Terima kasih
 
       </div>
     </p>

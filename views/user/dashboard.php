@@ -1,4 +1,10 @@
 <?php
+use yii\helpers\Html;
+use yii\helpers\Url;
+use kartik\date\DatePicker;
+use yii\widgets\ActiveForm;
+use yii\helpers\ArrayHelper;
+
 $this->title="Dashboard";
 $connection = \Yii::$app->db;
 $dn = date('Y-m-d');
@@ -292,6 +298,7 @@ GROUP BY kategori ORDER BY c_kategori ASC LIMIT 10")->queryAll();
         </div>
         <div class="col-lg-12 panel-row" id="panel-total-case">
           <div id="title-panel">Total Case <?=date('F Y')?></div>
+          <div style="border-bottom:2px solid #000;"></div>
           <div style="padding-top:30px;"></div>
           <div class="col-lg-4">
             <div id="total-case-month"><i class="fab fa-telegram" style="color:#0b7ec4;"></i><span class="count" style="float:right;font-size:0.6em;font-weight:bold;"><?=$total_mn_perform?></span><div style="font-size:0.3em;font-weight:bold;">TOTAL CASE</div></div>

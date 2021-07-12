@@ -225,9 +225,8 @@ $connection = \Yii::$app->db;
                 <?php if($model->gambar != NULL):?>
                   <div id="name-file"><b>Evidence</b></div>
                   <div id="gambar-search">
-                    <?=Html::img("@web/images/".$model->gambar, [
-                      'id' => "gbr-sml",
-                      'style' => " width:100%;max-width:100px;height:100%;border:0.5px solid #000;border-radius:5px;cursor:pointer;max-height:100px;",
+                    <?= Html::img('data:image/jpeg;base64,'.base64_encode($model->gambar_blob),[
+                      'id' => "gbr-evidence",
                       // 'title'=>'Bukti Gambar',
                       'tabindex' => "0",
                       'data-pjax' => '0',
@@ -237,9 +236,9 @@ $connection = \Yii::$app->db;
                       'data-placement' => 'right',
                       'aria-describedby'=>"popover-gbr-lg",
                       'data-content' => $this->render('@app/views/user/gambar-large',[
-                        'gambar' => $model->gambar
+                        'gambar' => $model->gambar_blob
                       ])
-                      ])?>
+                    ]) ?>
                   </div>
                 <?php endif;?>
                 
@@ -448,22 +447,21 @@ $connection = \Yii::$app->db;
                 endif;
                 $user_update=$connection->createCommand("SELECT * FROM user WHERE username='$onp->login'")->queryOne();
 
-                if($onp->feedback_gambar != NULL):
-                    $gambar = Html::img("@web/images/".$onp->feedback_gambar, [
-                      'id' => "gbr-sml",
-                      'style' => " width:100%;max-width:50px;height:100%;border:0.5px solid #000;border-radius:5px;cursor:pointer;max-height:50px;",
-                      // 'title'=>'Bukti Gambar',
-                      'tabindex' => "0",
-                      'data-pjax' => '0',
-                      'data-trigger' => "focus",
-                      'data-html' => "true",
-                      'data-toggle' => 'popover',
-                      'data-placement' => 'left',
-                      'aria-describedby'=>"popover-gbr-lg",
-                      'data-content' => $this->render('@app/views/user/gambar-large',[
-                        'gambar' => $onp->feedback_gambar
-                      ])
-                    ]);
+                if($onp->feedback_gambar != NULL):  
+                  $gambar = Html::img('data:image/jpeg;base64,'.base64_encode($onp->feedback_gambar_blob),[
+                    'id' => "gbr-evidence",
+                    // 'title'=>'Bukti Gambar',
+                    'tabindex' => "0",
+                    'data-pjax' => '0',
+                    'data-trigger' => "focus",
+                    'data-html' => "true",
+                    'data-toggle' => 'popover',
+                    'data-placement' => 'left',
+                    'aria-describedby'=>"popover-gbr-lg",
+                    'data-content' => $this->render('@app/views/user/gambar-large',[
+                      'gambar' => $onp->feedback_gambar_blob
+                    ])
+                  ]);
                 else:
                     $gambar = "-";
                 endif;

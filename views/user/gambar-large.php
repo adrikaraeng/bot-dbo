@@ -1,5 +1,7 @@
 <?php
-    use yii\helpers\Html;
-
+  use yii\helpers\Html;
 ?>
-<?=Html::img("@web/images/".$gambar,['id'=>'gbr-lg','style'=>'max-width:300px;'])?>
+<?= Html::img('data:image/jpeg;base64,'.base64_encode($gambar),[
+  'id' => 'gbr-evidence-lg'
+]) ?>
+

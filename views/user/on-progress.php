@@ -151,21 +151,21 @@ $this->params['breadcrumbs'][] = $this->title;
                   <div class="col-lg-12">
                     <label for="bukti_gambar">Evidence</label>
                     <div id="gambar-search">
-                        <?=Html::img("@web/images/".$model_a->gambar, [
-                          'id' => "gbr-sml",
-                          'style' => " width:100%;max-width:200px;height:100%;border:0.5px solid #000;border-radius:5px;cursor:pointer;max-height:200px;",
-                          // 'title'=>'Bukti Gambar',
-                          'tabindex' => "0",
-                          'data-pjax' => '0',
-                          'data-trigger' => "focus",
-                          'data-html' => "true",
-                          'data-toggle' => 'popover',
-                          'data-placement' => 'right',
-                          'aria-describedby'=>"popover-gbr-lg",
-                          'data-content' => $this->render('@app/views/user/gambar-large',[
-                            'gambar' => $model_a->gambar
-                          ])
-                        ])?>
+                          
+                          <?= Html::img('data:image/jpeg;base64,'.base64_encode($model_a->gambar_blob),[
+                            'id' => "gbr-evidence",
+                            // 'title'=>'Bukti Gambar',
+                            'tabindex' => "0",
+                            'data-pjax' => '0',
+                            'data-trigger' => "focus",
+                            'data-html' => "true",
+                            'data-toggle' => 'popover',
+                            'data-placement' => 'right',
+                            'aria-describedby'=>"popover-gbr-lg",
+                            'data-content' => $this->render('@app/views/user/gambar-large',[
+                              'gambar' => $model_a->gambar_blob
+                            ])
+                          ]) ?>
                     </div>
                   </div>
                 <?php endif;?>
@@ -302,21 +302,22 @@ $this->params['breadcrumbs'][] = $this->title;
               $user_update=$connection->createCommand("SELECT * FROM user WHERE username='$onp->login'")->queryOne();
 
               if($onp->feedback_gambar != NULL):
-                  $gambar = Html::img("@web/images/".$onp->feedback_gambar, [
-                    'id' => "gbr-sml",
-                    'style' => " width:100%;max-width:50px;height:100%;border:0.5px solid #000;border-radius:5px;cursor:pointer;max-height:50px;",
-                    // 'title'=>'Bukti Gambar',
-                    'tabindex' => "0",
-                    'data-pjax' => '0',
-                    'data-trigger' => "focus",
-                    'data-html' => "true",
-                    'data-toggle' => 'popover',
-                    'data-placement' => 'left',
-                    'aria-describedby'=>"popover-gbr-lg",
-                    'data-content' => $this->render('@app/views/user/gambar-large',[
-                      'gambar' => $onp->feedback_gambar
-                    ])
-                  ]);
+                
+                $gambar = Html::img('data:image/jpeg;base64,'.base64_encode($onp->feedback_gambar_blob),[
+                  'id' => "gbr-evidence",
+                  // 'title'=>'Bukti Gambar',
+                  'tabindex' => "0",
+                  'data-pjax' => '0',
+                  'data-trigger' => "focus",
+                  'data-html' => "true",
+                  'data-toggle' => 'popover',
+                  'data-placement' => 'left',
+                  'aria-describedby'=>"popover-gbr-lg",
+                  'data-content' => $this->render('@app/views/user/gambar-large',[
+                    'gambar' => $onp->feedback_gambar_blob
+                  ])
+                ]);
+
               else:
                   $gambar = "-";
               endif;

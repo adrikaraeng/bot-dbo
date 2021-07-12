@@ -70,7 +70,7 @@ class SiteController extends Controller
     public function actionGet_source()
     {
         $connection = \Yii::$app->db;
-        $token = 'bot1248348390:AAHP5NQxaby2z1-0AvJx7912qYWO4g2O9uM';
+        $token = 'bot1248348390:AAFFW--HaNLA7z7ign7uMhEhPWyWqDXEkzw';
         $data = file_get_contents("php://input");
         $data = json_decode($data, true);
         
@@ -894,7 +894,7 @@ class SiteController extends Controller
             $get_file = Yii::$app->telegram->getFile([
               'file_id' => $data['message']['photo']['1']['file_id'],
             ]);
-            $url = "https://api.telegram.org/file/bot1248348390:AAHP5NQxaby2z1-0AvJx7912qYWO4g2O9uM/".$get_file->result->file_path;
+            $url = "https://api.telegram.org/file/bot1248348390:AAFFW--HaNLA7z7ign7uMhEhPWyWqDXEkzw/".$get_file->result->file_path;
             $filename = basename($url);
     
             $ext = pathinfo($filename, PATHINFO_EXTENSION);

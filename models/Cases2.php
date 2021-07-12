@@ -49,7 +49,7 @@ class Cases2 extends \yii\db\ActiveRecord
     {
         return [
             [['keluhan', 'status_owner', 'feedback', 'kategori', 'nama', 'email', 'hp', 'app_version', 'telegram_id'], 'required', 'message'=>''],
-            [['keluhan', 'status_owner', 'gambar', 'feedback'], 'string'],
+            [['keluhan', 'status_owner', 'gambar', 'gambar_blob', 'feedback', 'feedback_gambar_blob'], 'string'],
             [['feedback_gambar'],
                 'file',
                 'extensions' => 'jpg, jpeg, png', 
